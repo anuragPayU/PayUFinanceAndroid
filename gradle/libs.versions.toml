@@ -1,0 +1,115 @@
+[versions]
+agp = "8.6.1"
+kotlin = "2.0.21"
+kotlinx_coroutines = "1.9.0"
+ksp = "2.0.21-1.0.28"
+
+compose_bom = "2024.12.01"
+compose_viewmodel = "2.8.7"
+compose_lifecycle_runtime = "2.8.7"
+compose_navigation = "2.8.5"
+compose_material = "1.7.6"
+material3 = "1.3.1"
+material_components = "1.12.0"
+
+lifecycle = "2.8.7"
+ktx_core = "1.15.0"
+ktx_activity = "1.9.3"
+app_compat = "1.7.0"
+
+retrofit = "2.11.0"
+okhttp = "4.12.0"
+gson = "2.11.0"
+chucker = "4.0.0"
+
+koin = "3.5.6"
+koin_android = "3.5.6"
+koin_compose = "3.5.6"
+
+coil_bom = "2.7.0"
+lottie = "6.6.2"
+
+elevate = "2.2"
+
+# Testing
+junit = "4.13.2"
+junit_android = "1.2.1"
+espresso = "3.6.1"
+coroutine_test = "1.9.0"
+mockk = "1.13.11"
+truth = "1.4.4"
+turbine = "1.1.0"
+compose_test_manifest = "1.7.6"
+compose_test_junit4 = "1.7.6"
+
+[libraries]
+# Kotlin
+kotlin-stdlib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib", version.ref = "kotlin" }
+kotlin-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "kotlinx_coroutines" }
+kotlin-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "kotlinx_coroutines" }
+
+# AndroidX Core
+androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "ktx_core" }
+androidx-activity = { group = "androidx.activity", name = "activity-ktx", version.ref = "ktx_activity" }
+androidx-app-compat = { group = "androidx.appcompat", name = "appcompat", version.ref = "app_compat" }
+androidx-lifecycle-viewmodel = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-ktx", version.ref = "lifecycle" }
+androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycle" }
+
+# Compose BOM
+compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "compose_bom" }
+compose-ui = { group = "androidx.compose.ui", name = "ui" }
+compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
+compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
+compose-foundation = { group = "androidx.compose.foundation", name = "foundation" }
+compose-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3" }
+compose-activity = { group = "androidx.activity", name = "activity-compose" }
+compose-viewmodel = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "compose_viewmodel" }
+compose-lifecycle-runtime = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "compose_lifecycle_runtime" }
+compose-navigation = { group = "androidx.navigation", name = "navigation-compose", version.ref = "compose_navigation" }
+
+# Network
+retrofit-main = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
+retrofit-gson = { group = "com.squareup.retrofit2", name = "converter-gson", version.ref = "retrofit" }
+okhttp-bom = { group = "com.squareup.okhttp3", name = "okhttp-bom", version.ref = "okhttp" }
+okhttp-main = { group = "com.squareup.okhttp3", name = "okhttp" }
+okhttp-logging-interceptor = { group = "com.squareup.okhttp3", name = "logging-interceptor" }
+google-gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
+chucker-library = { group = "com.github.chuckerteam.chucker", name = "library", version.ref = "chucker" }
+chucker-library-no-op = { group = "com.github.chuckerteam.chucker", name = "library-no-op", version.ref = "chucker" }
+
+# Dependency Injection - Koin
+koin-android = { group = "io.insert-koin", name = "koin-android", version.ref = "koin_android" }
+koin-androidx-compose = { group = "io.insert-koin", name = "koin-androidx-compose", version.ref = "koin_compose" }
+
+# Image Loading - Coil
+coil-bom = { group = "io.coil-kt", name = "coil-bom", version.ref = "coil_bom" }
+coil = { group = "io.coil-kt", name = "coil" }
+coil-compose = { group = "io.coil-kt", name = "coil-compose" }
+
+# Animations
+lottie = { group = "com.airbnb.android", name = "lottie", version.ref = "lottie" }
+lottie-compose = { group = "com.airbnb.android", name = "lottie-compose", version.ref = "lottie" }
+
+# Lazypay Elevate
+lazypay-elevate = { group = "com.lazypay.android", name = "elevate", version.ref = "elevate" }
+
+# Testing
+junit = { group = "junit", name = "junit", version.ref = "junit" }
+junit-android = { group = "androidx.test.ext", name = "junit", version.ref = "junit_android" }
+espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espresso" }
+coroutine-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutine_test" }
+mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
+mockk-android = { group = "io.mockk", name = "mockk-android", version.ref = "mockk" }
+truth = { group = "com.google.truth", name = "truth", version.ref = "truth" }
+turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine" }
+compose-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest", version.ref = "compose_test_manifest" }
+compose-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4", version.ref = "compose_test_junit4" }
+
+# Material Components for XML themes
+google-material = { group = "com.google.android.material", name = "material", version.ref = "material_components" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+kotlin-compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+

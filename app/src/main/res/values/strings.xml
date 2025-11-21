@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">PayU Finance</string>
+    
+    <!-- Mobile Input Screen -->
+    <string name="mobile_input_title">Enter Your Mobile Number</string>
+    <string name="mobile_input_subtitle">We\'ll send you an OTP to verify your number</string>
+    <string name="mobile_input_label">Mobile Number</string>
+    <string name="mobile_input_placeholder">Enter 10-digit mobile number</string>
+    <string name="mobile_input_continue_button">Continue</string>
+    <string name="mobile_input_consent_prefix">By continuing, you agree to our </string>
+    <string name="mobile_input_privacy_policy_link">Privacy Policy</string>
+    <string name="mobile_input_consent_middle"> and </string>
+    <string name="mobile_input_terms_link">Terms &amp; Conditions</string>
+    
+    <!-- Error Messages -->
+    <string name="error_invalid_mobile_number">Please enter a valid 10-digit mobile number</string>
+    <string name="error_network">Network error. Please try again.</string>
+    <string name="error_generic">An error occurred. Please try again.</string>
+</resources>
+
