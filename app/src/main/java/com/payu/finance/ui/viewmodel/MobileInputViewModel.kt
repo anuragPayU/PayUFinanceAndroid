@@ -32,6 +32,7 @@ sealed class MobileInputEvent {
     data class MobileNumberChanged(val mobileNumber: String) : MobileInputEvent()
     object SendOtp : MobileInputEvent()
     object ClearError : MobileInputEvent()
+    object ResetSendOtpResource : MobileInputEvent()
 }
 
 /**
@@ -94,7 +95,14 @@ class MobileInputViewModel(
             is MobileInputEvent.ClearError -> {
                 clearError()
             }
+            is MobileInputEvent.ResetSendOtpResource -> {
+                resetSendOtpResource()
+            }
         }
+    }
+    
+    private fun resetSendOtpResource() {
+        _sendOtpResource.value = Resource.Loading()
     }
 
     private fun updateMobileNumber(mobileNumber: String) {

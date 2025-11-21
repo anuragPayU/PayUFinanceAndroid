@@ -4,9 +4,11 @@ import com.payu.finance.common.Constants
 import com.payu.finance.data.api.AuthApiService
 import com.payu.finance.data.api.LoanApiService
 import com.payu.finance.data.api.RepaymentApiService
+import com.payu.finance.data.network.CookieInterceptor
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
+import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -21,6 +23,9 @@ val networkModule = module {
         val loggingInterceptor = HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BODY
         }
+
+        // Cookie interceptor to add cookies to requests (except Login and Verify OTP)
+        val cookieInterceptor = CookieInterceptor(get())
 
         // Header interceptor to add required headers
         val headerInterceptor = Interceptor { chain ->
@@ -38,6 +43,7 @@ val networkModule = module {
 
         OkHttpClient.Builder()
             .addInterceptor(headerInterceptor)
+            .addInterceptor(cookieInterceptor)
             .addInterceptor(loggingInterceptor)
             .connectTimeout(Constants.CONNECT_TIMEOUT, TimeUnit.SECONDS)
             .readTimeout(Constants.READ_TIMEOUT, TimeUnit.SECONDS)

@@ -8,16 +8,21 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 import com.payu.finance.ui.screen.HistoryScreen
 import com.payu.finance.ui.screen.HomeScreen
 import com.payu.finance.ui.screen.LoanDetailScreen
 import com.payu.finance.ui.screen.LoansScreen
 import com.payu.finance.ui.screen.MainScreen
 import com.payu.finance.ui.screen.ProfileScreen
+import com.payu.finance.ui.screen.RepaymentScreen
+import com.payu.finance.ui.screen.WebViewScreen
 import com.payu.finance.ui.viewmodel.HistoryViewModel
 import com.payu.finance.ui.viewmodel.HomeViewModel
 import com.payu.finance.ui.viewmodel.LoanDetailViewModel
 import com.payu.finance.ui.viewmodel.LoansViewModel
+import com.payu.finance.ui.viewmodel.RepaymentViewModel
 import org.koin.androidx.compose.koinViewModel
 
 /**
@@ -28,10 +33,17 @@ object MainRoutes {
     const val LOANS = "loans"
     const val LOAN_DETAIL = "loan_detail/{loanId}"
     const val REPAYMENTS = "repayments"
+    const val REPAYMENT = "repayment/{loanId}"
     const val PROFILE = "profile"
     const val HISTORY = "history"
+    const val WEB_VIEW = "web_view/{url}"
     
     fun loanDetail(loanId: String) = "loan_detail/$loanId"
+    fun repayment(loanId: String) = "repayment/$loanId"
+    fun webView(url: String): String {
+        val encodedUrl = URLEncoder.encode(url, StandardCharsets.UTF_8.toString())
+        return "web_view/$encodedUrl"
+    }
 }
 
 /**
@@ -65,9 +77,10 @@ fun MainNavigation(
                             popUpTo(MainRoutes.HOME) { inclusive = false }
                         }
                     },
-                    onNavigateToRepayment = { repaymentId ->
-                        // TODO: Navigate to repayment screen
-                        // navController.navigate("${MainRoutes.REPAYMENTS}/$repaymentId")
+                    onNavigateToRepayment = { loanId ->
+                        navController.navigate(MainRoutes.repayment(loanId)) {
+                            popUpTo(MainRoutes.HOME) { inclusive = false }
+                        }
                     },
                     onNavigateToLoanDetail = { loanId ->
                         navController.navigate(MainRoutes.loanDetail(loanId))
@@ -88,23 +101,27 @@ fun MainNavigation(
             
             composable(MainRoutes.PROFILE) {
                 ProfileScreen(
-                    onNavigateToHistory = {
-                        navController.navigate(MainRoutes.HISTORY) {
+                    onNavigateToWebView = { url ->
+                        navController.navigate(MainRoutes.webView(url)) {
                             popUpTo(MainRoutes.PROFILE) { inclusive = false }
                         }
                     },
-                    onNavigateToSettings = {
-                        // TODO: Navigate to settings screen
-                    },
-                    onNavigateToHelp = {
-                        // TODO: Navigate to help screen
-                    },
-                    onNavigateToAbout = {
-                        // TODO: Navigate to about screen
-                    },
                     onLogout = {
-                        // TODO: Handle logout
+                        // TODO: Handle logout - navigate to auth screen
+                        navController.popBackStack()
                     }
+                )
+            }
+            
+            composable(
+                route = MainRoutes.WEB_VIEW,
+                arguments = listOf(navArgument("url") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val encodedUrl = backStackEntry.arguments?.getString("url") ?: ""
+                val url = java.net.URLDecoder.decode(encodedUrl, StandardCharsets.UTF_8.toString())
+                WebViewScreen(
+                    url = url,
+                    onBackClick = { navController.popBackStack() }
                 )
             }
             
@@ -125,6 +142,20 @@ fun MainNavigation(
                 
                 LoanDetailScreen(
                     viewModel = loanDetailViewModel,
+                    loanId = loanId,
+                    onBackClick = { navController.popBackStack() }
+                )
+            }
+            
+            composable(
+                route = MainRoutes.REPAYMENT,
+                arguments = listOf(navArgument("loanId") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val loanId = backStackEntry.arguments?.getString("loanId") ?: ""
+                val repaymentViewModel: RepaymentViewModel = koinViewModel()
+                
+                RepaymentScreen(
+                    viewModel = repaymentViewModel,
                     loanId = loanId,
                     onBackClick = { navController.popBackStack() }
                 )

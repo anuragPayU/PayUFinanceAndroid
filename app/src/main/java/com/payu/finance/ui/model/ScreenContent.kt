@@ -42,6 +42,7 @@ data class ErrorMessagesData(
 data class OtpScreenData(
     val title: String,
     val subtitlePrefix: String,
+    val verifyingButtonText: String,
     val subtitleSuffix: String,
     val verifyButtonText: String,
     val resendOtpPrefix: String,

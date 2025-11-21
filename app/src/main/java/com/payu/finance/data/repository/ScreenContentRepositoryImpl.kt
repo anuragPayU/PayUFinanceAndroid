@@ -5,6 +5,7 @@ import com.payu.finance.data.datasource.ScreenContentRemoteDataSource
 import com.payu.finance.data.model.toDomain
 import com.payu.finance.domain.model.MobileInputScreenContent
 import com.payu.finance.domain.model.OtpScreenContent
+import com.payu.finance.domain.model.ProfileScreenContent
 import com.payu.finance.domain.repository.ScreenContentRepository
 
 /**
@@ -24,6 +25,12 @@ class ScreenContentRepositoryImpl(
     override suspend fun getOtpScreenContent(): Result<OtpScreenContent> {
         return safeApiCall {
             screenContentRemoteDataSource.getOtpScreenContent().toDomain()
+        }
+    }
+    
+    override suspend fun getProfileScreenContent(): Result<ProfileScreenContent> {
+        return safeApiCall {
+            screenContentRemoteDataSource.getProfileScreenContent().toDomain()
         }
     }
 }

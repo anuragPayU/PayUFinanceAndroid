@@ -2,8 +2,7 @@ package com.payu.finance.ui.viewmodel
 
 import com.payu.finance.common.Resource
 import com.payu.finance.common.toResource
-import com.payu.finance.domain.model.RepaymentStatus
-import com.payu.finance.domain.usecase.GetRepaymentsUseCase
+import com.payu.finance.domain.usecase.GetHistoryScreenContentUseCase
 import com.payu.finance.ui.base.BaseViewModel
 import com.payu.finance.ui.model.EmiStatus
 import com.payu.finance.ui.screen.HistoryItem
@@ -23,7 +22,7 @@ sealed class HistoryEvent {
  * ViewModel for History screen
  */
 class HistoryViewModel(
-    private val getRepaymentsUseCase: GetRepaymentsUseCase
+    private val getHistoryScreenContentUseCase: GetHistoryScreenContentUseCase
 ) : BaseViewModel<Unit, HistoryEvent>() {
 
     private val _historyResource = MutableStateFlow<Resource<List<HistoryItem>>>(Resource.Loading())
@@ -47,28 +46,18 @@ class HistoryViewModel(
     fun loadHistory() {
         execute {
             _historyResource.value = Resource.Loading()
-            val result = getRepaymentsUseCase().toResource()
+            val result = getHistoryScreenContentUseCase().toResource()
             _historyResource.value = result.let { resource ->
                 when (resource) {
                     is Resource.Success -> {
-                        val repayments = resource.data ?: emptyList()
-                        val historyItems = repayments.map { repayment ->
-                            HistoryItem(
-                                id = repayment.id,
-                                title = "EMI Payment",
-                                description = "Loan #${repayment.loanId}",
-                                amount = formatCurrency(repayment.amount),
-                                date = formatDate(repayment.dueDate),
-                                status = when (repayment.status) {
-                                    RepaymentStatus.PAID -> EmiStatus.PAID
-                                    RepaymentStatus.PENDING -> EmiStatus.PENDING
-                                    RepaymentStatus.OVERDUE -> EmiStatus.OVERDUE
-                                    RepaymentStatus.PARTIALLY_PAID -> EmiStatus.PARTIALLY_PAID
-                                },
-                                loanId = repayment.loanId
-                            )
-                        }.sortedByDescending { it.date }
-                        Resource.Success(historyItems)
+                        val historyContent = resource.data
+                        if (historyContent != null) {
+                            // Map API response to UI state
+                            val historyItems = mapHistoryContentToHistoryItems(historyContent)
+                            Resource.Success(historyItems)
+                        } else {
+                            Resource.Error("No history data available")
+                        }
                     }
                     is Resource.Error -> Resource.Error(resource.message ?: "Failed to load history")
                     is Resource.Loading -> Resource.Loading()
@@ -77,13 +66,55 @@ class HistoryViewModel(
         }
     }
 
-    private fun formatCurrency(amount: Double): String {
-        return "₹${String.format("%.2f", amount)}"
+    /**
+     * Maps HistoryScreenContent (Domain model) to List<HistoryItem> (UI model)
+     */
+    private fun mapHistoryContentToHistoryItems(historyContent: com.payu.finance.domain.model.HistoryScreenContent): List<HistoryItem> {
+        val historyItems = mutableListOf<HistoryItem>()
+        
+        // Extract components from sections
+        historyContent.sections.forEach { section ->
+            section.components?.forEachIndexed { index, component ->
+                historyItems.add(
+                    HistoryItem(
+                        id = "${section.type}_${index}",
+                        title = component.title ?: "Repayment",
+                        description = "", // Description field is empty in HistoryItem, date is used for date
+                        amount = component.subtitle ?: "₹0", // subtitle contains the amount
+                        date = component.description ?: "", // description contains the date/time
+                        status = mapMetaToEmiStatus(component.meta),
+                        loanId = "" // TODO: Extract loanId from component if available
+                    )
+                )
+            }
+        }
+        
+        return historyItems.sortedByDescending { it.date }
     }
 
-    private fun formatDate(dateString: String): String {
-        // TODO: Implement proper date formatting
-        return dateString
+    /**
+     * Maps meta color/label to EmiStatus
+     */
+    private fun mapMetaToEmiStatus(meta: com.payu.finance.domain.model.HistoryMeta?): EmiStatus {
+        if (meta == null) return EmiStatus.PENDING
+        
+        // Map based on color or label
+        return when {
+            meta.color?.contains("positive", ignoreCase = true) == true || 
+            meta.color?.contains("postive", ignoreCase = true) == true ||
+            meta.label?.equals("Successful", ignoreCase = true) == true -> EmiStatus.PAID
+            
+            meta.color?.contains("negative", ignoreCase = true) == true ||
+            meta.color?.contains("error", ignoreCase = true) == true ||
+            meta.label?.equals("Overdue", ignoreCase = true) == true -> EmiStatus.OVERDUE
+            
+            meta.color?.contains("warning", ignoreCase = true) == true ||
+            meta.label?.equals("Pending", ignoreCase = true) == true -> EmiStatus.PENDING
+            
+            meta.label?.equals("Partial", ignoreCase = true) == true -> EmiStatus.PARTIALLY_PAID
+            
+            else -> EmiStatus.PENDING
+        }
     }
 
     override fun handleError(exception: Exception) {

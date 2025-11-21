@@ -1,6 +1,7 @@
 package com.payu.finance.data.api
 
 import com.payu.finance.data.model.LoanDto
+import com.payu.finance.data.model.LoanDetailScreenDto
 import retrofit2.Response
 import retrofit2.http.*
 
@@ -14,6 +15,9 @@ interface LoanApiService {
 
     @GET("loans/{id}")
     suspend fun getLoanById(@Path("id") loanId: String): Response<LoanDto>
+
+    @GET("loans/{id}/detail")
+    suspend fun getLoanDetailScreenContent(@Path("id") loanId: String): Response<LoanDetailScreenDto>
 
     @POST("loans")
     suspend fun createLoan(@Body loan: LoanDto): Response<LoanDto>

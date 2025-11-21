@@ -3,6 +3,7 @@ package com.payu.finance.domain.repository
 import com.payu.finance.common.Result
 import com.payu.finance.domain.model.MobileInputScreenContent
 import com.payu.finance.domain.model.OtpScreenContent
+import com.payu.finance.domain.model.ProfileScreenContent
 
 /**
  * Repository interface for Screen Content
@@ -18,5 +19,10 @@ interface ScreenContentRepository : BaseRepository {
      * Fetch OTP Screen content
      */
     suspend fun getOtpScreenContent(): Result<OtpScreenContent>
+    
+    /**
+     * Fetch Profile Screen content
+     */
+    suspend fun getProfileScreenContent(): Result<ProfileScreenContent>
 }
 

@@ -5,13 +5,15 @@ import android.content.Context
 import android.net.Uri
 import android.os.Environment
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material3.*
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -24,17 +26,19 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import kotlinx.coroutines.launch
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.lazypay.android.elevate.component.ButtonState
+import com.lazypay.android.elevate.component.LPButton
+import com.lazypay.android.elevate.component.Text as ElevateText
+import com.lazypay.android.elevate.theme.*
+import androidx.compose.material.ButtonDefaults
 import com.payu.finance.common.Resource
 import com.payu.finance.ui.components.StatusChip
-import com.payu.finance.ui.model.EmiBreakdownItem
-import com.payu.finance.ui.model.EmiStatus
-import com.payu.finance.ui.model.LoanDetailUiState
-import com.payu.finance.ui.model.LoanStatus
+import com.payu.finance.ui.model.*
+import com.payu.finance.ui.theme.PayUFinanceColors
 import com.payu.finance.ui.viewmodel.LoanDetailViewModel
 
 /**
@@ -63,15 +67,24 @@ fun LoanDetailScreen(
         },
         topBar = {
             TopAppBar(
-                title = { Text("Loan Details") },
+                title = { 
+                    ElevateText(
+                        markup = "Loan Details",
+                        style = LpTypography.TitleSection,
+                        color = PayUFinanceColors.ContentPrimary
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(
+                            Icons.Default.ArrowBack, 
+                            contentDescription = "Back",
+                            tint = PayUFinanceColors.ContentPrimary
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    containerColor = PayUFinanceColors.BackgroundPrimary
                 )
             )
         }
@@ -79,6 +92,7 @@ fun LoanDetailScreen(
         Box(
             modifier = modifier
                 .fillMaxSize()
+                .background(PayUFinanceColors.BackgroundPrimary)
                 .padding(paddingValues)
         ) {
             when (val resource = uiState) {
@@ -101,8 +115,7 @@ fun LoanDetailScreen(
                     if (loanDetail != null) {
                         LoanDetailContent(
                             loanDetail = loanDetail,
-                        onDownloadLoanAgreement = { url ->
-                            val fileName = "Loan_Agreement_${loanDetail.loanId}.pdf"
+                            onDownloadClick = { url, fileName ->
                             if (downloadFile(context, url, fileName)) {
                                 coroutineScope.launch {
                                     snackbarHostState.showSnackbar("Download started: $fileName")
@@ -113,15 +126,22 @@ fun LoanDetailScreen(
                                 }
                             }
                         },
-                        onDownloadSanctionLetter = { url ->
-                            val fileName = "Sanction_Letter_${loanDetail.loanId}.pdf"
-                            if (downloadFile(context, url, fileName)) {
+                            onActionClick = { action ->
+                                when (action.type) {
+                                    "REPAYMENT" -> {
+                                        // Handle repayment action
                                 coroutineScope.launch {
-                                    snackbarHostState.showSnackbar("Download started: $fileName")
+                                            snackbarHostState.showSnackbar("Opening repayment...")
+                                        }
                                 }
-                            } else {
+                                    "SEE_SECHEDULE" -> {
+                                        // Handle see schedule action
                                 coroutineScope.launch {
-                                    snackbarHostState.showSnackbar("Failed to start download")
+                                            snackbarHostState.showSnackbar("Opening schedule...")
+                                        }
+                                    }
+                                    else -> {
+                                        // Handle other actions
                                 }
                             }
                         }
@@ -138,159 +158,46 @@ fun LoanDetailScreen(
  */
 @Composable
 fun LoanDetailContent(
-    loanDetail: com.payu.finance.ui.model.LoanDetailUiState,
-    onDownloadLoanAgreement: (String) -> Unit,
-    onDownloadSanctionLetter: (String) -> Unit,
+    loanDetail: LoanDetailUiState,
+    onDownloadClick: (String, String) -> Unit,
+    onActionClick: (ActionItem) -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
         modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        contentPadding = PaddingValues(
+            horizontal = Spacing40,
+            vertical = Spacing20
+        ),
+        verticalArrangement = Arrangement.spacedBy(Spacing30)
     ) {
-        // Loan Overview Card
-        item {
-            LoanOverviewCard(loanDetail = loanDetail)
-        }
-
-        // Payment Summary Card
-        item {
-            PaymentSummaryCard(loanDetail = loanDetail)
-        }
-
-        // Next EMI Card (if applicable)
-        loanDetail.nextEmiDate?.let { nextEmiDate ->
-            item {
-                NextEmiCard(
-                    amount = loanDetail.nextEmiAmount ?: "",
-                    dueDate = nextEmiDate
-                )
-            }
-        }
-
-        // EMI Breakdown Section
-        if (loanDetail.emiBreakdown.isNotEmpty()) {
-            item {
-                Text(
-                    text = "EMI Breakdown",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(vertical = 8.dp)
-                )
-            }
-            items(
-                count = loanDetail.emiBreakdown.size,
-                key = { index -> loanDetail.emiBreakdown[index].installmentNumber }
-            ) { index ->
-                EmiBreakdownItemCard(emiItem = loanDetail.emiBreakdown[index])
-            }
-        }
-
-        // Documents Section
-        item {
-            Text(
-                text = "Documents",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(vertical = 8.dp)
-            )
-        }
-
-        // Loan Agreement
-        loanDetail.loanAgreementUrl?.let { url ->
-            item {
-                DocumentDownloadCard(
-                    title = "Loan Agreement",
-                    onDownloadClick = { onDownloadLoanAgreement(url) }
-                )
-            }
-        }
-
-        // Sanction Letter
-        loanDetail.sanctionLetterUrl?.let { url ->
-            item {
-                DocumentDownloadCard(
-                    title = "Sanction Letter",
-                    onDownloadClick = { onDownloadSanctionLetter(url) }
-                )
-            }
-        }
-    }
-}
-
-/**
- * Loan Overview Card
- */
-@Composable
-fun LoanOverviewCard(
-    loanDetail: com.payu.finance.ui.model.LoanDetailUiState,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        shape = RoundedCornerShape(12.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Loan Amount",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                StatusChip(
-                    status = when (loanDetail.status) {
-                        LoanStatus.ACTIVE -> EmiStatus.PENDING
-                        LoanStatus.COMPLETED -> EmiStatus.PAID
-                        LoanStatus.OVERDUE -> EmiStatus.OVERDUE
-                        LoanStatus.PENDING -> EmiStatus.PENDING
-                    }
-                )
-            }
-
-            Text(
-                text = loanDetail.loanAmount,
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold
-            )
-
-            Divider()
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                InfoItem(
-                    label = "Interest Rate",
-                    value = loanDetail.interestRate
-                )
-                InfoItem(
-                    label = "Tenure",
-                    value = "${loanDetail.tenure} months"
-                )
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                InfoItem(
-                    label = "Disbursement Date",
-                    value = loanDetail.disbursementDate
-                )
-                loanDetail.dueDate?.let { dueDate ->
-                    InfoItem(
-                        label = "Due Date",
-                        value = dueDate
+        items(
+            count = loanDetail.sections.size,
+            key = { index -> index }
+        ) { index ->
+            when (val section = loanDetail.sections[index]) {
+                is LoanDetailSectionUiItem.DetailCard -> {
+                    DetailCardSection(section = section)
+                }
+                is LoanDetailSectionUiItem.EmiDetail -> {
+                    EmiDetailSection(
+                        section = section,
+                        onActionClick = onActionClick
+                    )
+                }
+                is LoanDetailSectionUiItem.AutoPayStatus -> {
+                    AutoPayStatusSection(section = section)
+                }
+                is LoanDetailSectionUiItem.ForeclosureCard -> {
+                    ForeclosureCardSection(
+                        section = section,
+                        onActionClick = onActionClick
+                    )
+                }
+                is LoanDetailSectionUiItem.RowListCard -> {
+                    RowListCardSection(
+                        section = section,
+                        onDownloadClick = onDownloadClick
                     )
                 }
             }
@@ -299,200 +206,388 @@ fun LoanOverviewCard(
 }
 
 /**
- * Payment Summary Card
+ * Detail Card Section
  */
 @Composable
-fun PaymentSummaryCard(
-    loanDetail: com.payu.finance.ui.model.LoanDetailUiState,
+fun DetailCardSection(
+    section: LoanDetailSectionUiItem.DetailCard,
     modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        shape = RoundedCornerShape(12.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Text(
-                text = "Payment Summary",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                InfoItem(
-                    label = "Paid Amount",
-                    value = loanDetail.paidAmount
-                )
-                InfoItem(
-                    label = "Remaining Amount",
-                    value = loanDetail.remainingAmount
-                )
-            }
-
-            Divider()
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                InfoItem(
-                    label = "Paid Installments",
-                    value = "${loanDetail.paidInstallments}/${loanDetail.totalInstallments}"
-                )
-                val progress = if (loanDetail.totalInstallments > 0) {
-                    (loanDetail.paidInstallments.toFloat() / loanDetail.totalInstallments.toFloat() * 100).toInt()
-                } else 0
-                InfoItem(
-                    label = "Progress",
-                    value = "$progress%"
-                )
-            }
-
-            LinearProgressIndicator(
-                progress = if (loanDetail.totalInstallments > 0) {
-                    loanDetail.paidInstallments.toFloat() / loanDetail.totalInstallments.toFloat()
-                } else 0f,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(8.dp),
-                color = MaterialTheme.colorScheme.primary,
-                trackColor = MaterialTheme.colorScheme.surfaceVariant
-            )
-        }
-    }
-}
-
-/**
- * Next EMI Card
- */
-@Composable
-fun NextEmiCard(
-    amount: String,
-    dueDate: String,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        shape = RoundedCornerShape(12.dp),
+        modifier = modifier
+            .fillMaxWidth()
+            .border(
+                width = 1.dp,
+                color = PayUFinanceColors.BorderPrimary,
+                shape = RoundedCornerShape(Spacing30)
+            ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        shape = RoundedCornerShape(Spacing30),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer
+            containerColor = PayUFinanceColors.CardBackground
         )
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+                .padding(Spacing40),
+            verticalArrangement = Arrangement.spacedBy(Spacing20)
         ) {
-            Column {
-                Text(
-                    text = "Next EMI",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = amount,
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "Due: $dueDate",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    ElevateText(
+                        markup = section.subtitle ?: "",
+                        style = LpTypography.BodySmall,
+                        color = PayUFinanceColors.ContentSecondary,
+                        modifier = Modifier.padding(bottom = Spacing10)
+                    )
+                    ElevateText(
+                        markup = section.title,
+                        style = LpTypography.TitleSection,
+                        color = PayUFinanceColors.ContentPrimary
+                    )
+                }
+                section.statusLabel?.let { label ->
+                    StatusChip(
+                        status = when (label.uppercase()) {
+                            "ACTIVE", "PENDING" -> EmiStatus.PENDING
+                            "PAID", "COMPLETED" -> EmiStatus.PAID
+                            "OVERDUE" -> EmiStatus.OVERDUE
+                            else -> EmiStatus.PENDING
+                        }
+                    )
+                }
             }
         }
     }
 }
 
 /**
- * EMI Breakdown Item Card
+ * EMI Detail Section
  */
 @Composable
-fun EmiBreakdownItemCard(
-    emiItem: com.payu.finance.ui.model.EmiBreakdownItem,
+fun EmiDetailSection(
+    section: LoanDetailSectionUiItem.EmiDetail,
+    onActionClick: (ActionItem) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Card(
+    Column(
         modifier = modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-        shape = RoundedCornerShape(8.dp)
+        verticalArrangement = Arrangement.spacedBy(Spacing20)
     ) {
-        Column(
+        ElevateText(
+            markup = section.title,
+            style = LpTypography.TitleSection,
+            color = PayUFinanceColors.ContentPrimary,
+            modifier = Modifier.padding(bottom = Spacing20)
+        )
+
+        Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+                .border(
+                    width = 1.dp,
+                    color = PayUFinanceColors.BorderPrimary,
+                    shape = RoundedCornerShape(Spacing30)
+                ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+            shape = RoundedCornerShape(Spacing30),
+            colors = CardDefaults.cardColors(
+                containerColor = PayUFinanceColors.CardBackground
+            )
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(Spacing40),
+                verticalArrangement = Arrangement.spacedBy(Spacing30)
+            ) {
+                // Header
+                section.header?.let { header ->
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(Spacing20)
+                    ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                ElevateText(
+                                    markup = header.title,
+                                    style = LpTypography.TitlePrimary,
+                                    color = PayUFinanceColors.ContentPrimary,
+                                    modifier = Modifier.padding(bottom = Spacing10)
+                                )
+                                header.subtitle?.let { subtitle ->
+                                    ElevateText(
+                                        markup = subtitle,
+                                        style = LpTypography.BodyNormal,
+                                        color = PayUFinanceColors.ContentSecondary
+                                    )
+                                }
+                            }
+                            header.percentage?.let { percentage ->
+                                ElevateText(
+                                    markup = "$percentage%",
+                                    style = LpTypography.TitleSecondary,
+                                    color = PayUFinanceColors.Primary
+                                )
+                            }
+                        }
+                        header.percentage?.let { percentage ->
+                            LinearProgressIndicator(
+                                progress = (percentage.toFloatOrNull() ?: 0f) / 100f,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(8.dp)
+                                    .clip(RoundedCornerShape(4.dp)),
+                                color = PayUFinanceColors.ProgressBarFill,
+                                trackColor = PayUFinanceColors.ProgressBarTrack
+                            )
+                        }
+                    }
+                    Divider(
+                        color = PayUFinanceColors.BorderPrimary,
+                        thickness = 1.dp,
+                        modifier = Modifier.padding(vertical = Spacing10)
+                    )
+                }
+
+                // Rows
+                section.rows.forEachIndexed { index, row ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = Spacing10),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        ElevateText(
+                            markup = row.title,
+                            style = LpTypography.BodyNormal,
+                            color = PayUFinanceColors.ContentSecondary,
+                            modifier = Modifier.weight(1f)
+                        )
+                        ElevateText(
+                            markup = row.subtitle,
+                            style = LpTypography.BodyNormal,
+                            color = PayUFinanceColors.ContentPrimary,
+                            modifier = Modifier.padding(start = Spacing20)
+                        )
+                    }
+                    if (index < section.rows.size - 1) {
+                        Divider(
+                            color = PayUFinanceColors.BorderPrimary,
+                            thickness = 1.dp,
+                            modifier = Modifier.padding(vertical = Spacing10)
+                        )
+                    }
+                }
+
+                // Primary Action
+                section.primaryAction?.let { action ->
+                    Spacer(modifier = Modifier.height(Spacing10))
+                    TextButton(
+                        onClick = { onActionClick(action) },
+                modifier = Modifier.fillMaxWidth(),
+                        contentPadding = PaddingValues(0.dp)
+                    ) {
+                        ElevateText(
+                            markup = action.text ?: "",
+                            style = LpTypography.TitleSecondary,
+                            color = PayUFinanceColors.Primary
+                        )
+                        Spacer(modifier = Modifier.width(Spacing10))
+                        Icon(
+                            imageVector = Icons.Default.ArrowForward,
+                            contentDescription = null,
+                            tint = PayUFinanceColors.Primary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Auto Pay Status Section
+ */
+@Composable
+fun AutoPayStatusSection(
+    section: LoanDetailSectionUiItem.AutoPayStatus,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(Spacing20)
+    ) {
+        ElevateText(
+            markup = section.title,
+            style = LpTypography.TitleSection,
+            color = PayUFinanceColors.ContentPrimary,
+            modifier = Modifier.padding(bottom = Spacing20)
+        )
+
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(
+                    width = 1.dp,
+                    color = PayUFinanceColors.BorderPrimary,
+                    shape = RoundedCornerShape(Spacing30)
+                ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+            shape = RoundedCornerShape(Spacing30),
+            colors = CardDefaults.cardColors(
+                containerColor = PayUFinanceColors.SuccessBackground
+            )
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(Spacing40),
+                horizontalArrangement = Arrangement.spacedBy(Spacing20),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "EMI ${emiItem.installmentNumber}",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold
-                )
-                StatusChip(status = emiItem.status)
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Column {
-                    Text(
-                        text = "Amount",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                Column(modifier = Modifier.weight(1f)) {
+                    ElevateText(
+                        markup = section.statusCard.title,
+                        style = LpTypography.TitlePrimary,
+                        color = PayUFinanceColors.Success,
+                        modifier = Modifier.padding(bottom = Spacing10)
                     )
-                    Text(
-                        text = emiItem.amount,
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-                Column(horizontalAlignment = Alignment.End) {
-                    Text(
-                        text = "Due Date",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = emiItem.dueDate,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
+                    section.statusCard.subtitle?.let { subtitle ->
+                        ElevateText(
+                            markup = subtitle,
+                            style = LpTypography.BodyNormal,
+                            color = PayUFinanceColors.ContentSecondary
+                        )
+                    }
                 }
             }
+        }
+    }
+}
 
-            Divider()
+/**
+ * Foreclosure Card Section
+ */
+@Composable
+fun ForeclosureCardSection(
+    section: LoanDetailSectionUiItem.ForeclosureCard,
+    onActionClick: (ActionItem) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(Spacing20)
+    ) {
+        ElevateText(
+            markup = section.title,
+            style = LpTypography.TitleSection,
+            color = PayUFinanceColors.ContentPrimary,
+            modifier = Modifier.padding(bottom = Spacing20)
+        )
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(
+                    width = 1.dp,
+                    color = PayUFinanceColors.BorderPrimary,
+                    shape = RoundedCornerShape(Spacing30)
+                ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+            shape = RoundedCornerShape(Spacing30),
+            colors = CardDefaults.cardColors(
+                containerColor = PayUFinanceColors.CardBackground
+            )
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(Spacing40),
+                verticalArrangement = Arrangement.spacedBy(Spacing20)
             ) {
-                InfoItem(
-                    label = "Principal",
-                    value = emiItem.principalAmount
+                ElevateText(
+                    markup = section.card.title,
+                    style = LpTypography.BodySmall,
+                    color = PayUFinanceColors.ContentSecondary,
+                    modifier = Modifier.padding(bottom = Spacing10)
                 )
-                InfoItem(
-                    label = "Interest",
-                    value = emiItem.interestAmount
+                ElevateText(
+                    markup = section.card.subtitle,
+                    style = LpTypography.TitleSection,
+                    color = PayUFinanceColors.ContentPrimary,
+                    modifier = Modifier.padding(bottom = Spacing10)
                 )
+                section.card.description?.let { description ->
+                    ElevateText(
+                        markup = description,
+                        style = LpTypography.BodyNormal,
+                        color = PayUFinanceColors.ContentSecondary,
+                        modifier = Modifier.padding(bottom = Spacing20)
+                    )
+                }
+                section.card.action?.let { action ->
+                    LPButton(
+                        text = action.text ?: "",
+                        state = ButtonState.Enabled,
+                        backgroundColor = PayUFinanceColors.Primary,
+                        pressedBackgroundColor = PayUFinanceColors.PrimaryDark,
+                        disabledBackgroundColor = PayUFinanceColors.BackgroundTertiary,
+                        contentColor = PayUFinanceColors.BackgroundPrimary,
+                        pressedContentColor = PayUFinanceColors.BackgroundPrimary,
+                        disabledContentColor = PayUFinanceColors.ContentTertiary,
+                        circularProgressColor = PayUFinanceColors.BackgroundPrimary,
+                        buttonElevation = ButtonDefaults.elevation(),
+                        onClick = { onActionClick(action) },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
+        }
+    }
+}
+
+/**
+ * Row List Card Section
+ */
+@Composable
+fun RowListCardSection(
+    section: LoanDetailSectionUiItem.RowListCard,
+    onDownloadClick: (String, String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(Spacing20)
+    ) {
+        ElevateText(
+            markup = section.title,
+            style = LpTypography.TitleSection,
+            color = PayUFinanceColors.ContentPrimary,
+            modifier = Modifier.padding(bottom = Spacing10)
+        )
+
+        section.items.forEach { item ->
+            DocumentDownloadCard(
+                title = item.title,
+                onDownloadClick = {
+                    item.action?.url?.let { url ->
+                        val fileName = "${item.title.replace(" ", "_")}.pdf"
+                        onDownloadClick(url, fileName)
+                    }
+                }
+            )
         }
     }
 }
@@ -509,26 +604,35 @@ fun DocumentDownloadCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
+            .border(
+                width = 1.dp,
+                color = PayUFinanceColors.BorderPrimary,
+                shape = RoundedCornerShape(Spacing30)
+            )
             .clickable(onClick = onDownloadClick),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-        shape = RoundedCornerShape(8.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        shape = RoundedCornerShape(Spacing30),
+        colors = CardDefaults.cardColors(
+            containerColor = PayUFinanceColors.CardBackground
+        )
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(Spacing40),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Medium
+            ElevateText(
+                markup = title,
+                style = LpTypography.BodyNormal,
+                color = PayUFinanceColors.ContentPrimary
             )
             Icon(
-                imageVector = Icons.Default.MoreVert,
+                imageVector = Icons.Default.ArrowForward,
                 contentDescription = "Download",
-                tint = MaterialTheme.colorScheme.primary
+                tint = PayUFinanceColors.Primary,
+                modifier = Modifier.size(24.dp)
             )
         }
     }
@@ -544,16 +648,16 @@ fun InfoItem(
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+        ElevateText(
+            markup = label,
+            style = LpTypography.BodySmall,
+            color = PayUFinanceColors.ContentSecondary,
+            modifier = Modifier.padding(bottom = Spacing10)
         )
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.SemiBold
+        ElevateText(
+            markup = value,
+            style = LpTypography.BodyNormal,
+            color = PayUFinanceColors.ContentPrimary
         )
     }
 }
@@ -592,53 +696,54 @@ fun downloadFile(context: Context, url: String, fileName: String): Boolean {
 private fun LoanDetailScreenPreview() {
     com.payu.finance.ui.theme.PayUFinanceTheme {
         val mockLoanDetail = LoanDetailUiState(
-            loanId = "loan_1",
-            loanAmount = "₹1,00,000",
-            interestRate = "12%",
-            tenure = 12,
-            status = LoanStatus.ACTIVE,
-            disbursementDate = "01 Jan 2023",
-            dueDate = "15 Jan 2024",
-            remainingAmount = "₹60,000",
-            paidAmount = "₹40,000",
-            totalInstallments = 12,
-            paidInstallments = 5,
-            nextEmiDate = "15 Jan 2024",
-            nextEmiAmount = "₹8,333",
-            emiBreakdown = listOf(
-                EmiBreakdownItem(
-                    installmentNumber = 1,
-                    amount = "₹8,333",
-                    dueDate = "15 Dec 2023",
-                    status = EmiStatus.PAID,
-                    principalAmount = "₹7,333",
-                    interestAmount = "₹1,000"
+            sections = listOf(
+                LoanDetailSectionUiItem.DetailCard(
+                    title = "₹4,00,000 Loan",
+                    subtitle = "Loan Details",
+                    statusLabel = "Active",
+                    statusColor = "#10B981"
                 ),
-                EmiBreakdownItem(
-                    installmentNumber = 2,
-                    amount = "₹8,333",
-                    dueDate = "15 Jan 2024",
-                    status = EmiStatus.PENDING,
-                    principalAmount = "₹7,333",
-                    interestAmount = "₹1,000"
+                LoanDetailSectionUiItem.EmiDetail(
+                    title = "EMI details",
+                    header = EmiDetailHeader(
+                        title = "3 EMIs remaining",
+                        subtitle = "₹12,100 left to pay",
+                        percentage = "80"
+                    ),
+                    rows = listOf(
+                        EmiDetailRow("Loan amount", "₹10,000"),
+                        EmiDetailRow("EMI amount", "₹2,000/m"),
+                        EmiDetailRow("Tenure", "3 months")
+                    ),
+                    primaryAction = ActionItem("See full EMI schedule", "SEE_SECHEDULE", "")
                 ),
-                EmiBreakdownItem(
-                    installmentNumber = 3,
-                    amount = "₹8,333",
-                    dueDate = "15 Feb 2024",
-                    status = EmiStatus.PENDING,
-                    principalAmount = "₹7,333",
-                    interestAmount = "₹1,000"
+                LoanDetailSectionUiItem.AutoPayStatus(
+                    title = "Auto-pay",
+                    statusCard = AutoPayStatusCard(
+                        title = "Auto-pay active",
+                        subtitle = "Sit back and relax! Your bill will be auto-paid"
+                    )
+                ),
+                LoanDetailSectionUiItem.RowListCard(
+                    title = "Actions",
+                    items = listOf(
+                        ActionableCardItem(
+                            title = "Loan Agreement",
+                            action = ActionItem("", "DOWNLOADABLE", "https://example.com/loan_agreement.pdf")
+                        ),
+                        ActionableCardItem(
+                            title = "Sanction letter",
+                            action = ActionItem("", "DOWNLOADABLE", "https://example.com/sanction_letter.pdf")
+                        )
+                    )
                 )
-            ),
-            loanAgreementUrl = "https://example.com/loan_agreement.pdf",
-            sanctionLetterUrl = "https://example.com/sanction_letter.pdf"
+            )
         )
         
         LoanDetailContent(
             loanDetail = mockLoanDetail,
-            onDownloadLoanAgreement = {},
-            onDownloadSanctionLetter = {}
+            onDownloadClick = { _, _ -> },
+            onActionClick = {}
         )
     }
 }

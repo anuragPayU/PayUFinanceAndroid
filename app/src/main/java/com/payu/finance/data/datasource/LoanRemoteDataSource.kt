@@ -2,6 +2,7 @@ package com.payu.finance.data.datasource
 
 import com.payu.finance.data.api.LoanApiService
 import com.payu.finance.data.model.LoanDto
+import com.payu.finance.data.model.LoanDetailScreenDto
 
 /**
  * Remote data source for Loan
@@ -25,6 +26,15 @@ class LoanRemoteDataSource(
             return response.body()!!
         } else {
             throw Exception("Failed to fetch loan: ${response.message()}")
+        }
+    }
+
+    suspend fun getLoanDetailScreenContent(loanId: String): LoanDetailScreenDto {
+        val response = loanApiService.getLoanDetailScreenContent(loanId)
+        if (response.isSuccessful && response.body() != null) {
+            return response.body()!!
+        } else {
+            throw Exception("Failed to fetch loan detail screen content: ${response.message()}")
         }
     }
 

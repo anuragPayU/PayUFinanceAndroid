@@ -1,9 +1,13 @@
 package com.payu.finance.data.api
 
+import com.payu.finance.data.model.AuthenticateRequestDto
+import com.payu.finance.data.model.AuthenticateResponseDto
 import com.payu.finance.data.model.SendOtpRequestDto
 import com.payu.finance.data.model.SendOtpResponseDto
 import com.payu.finance.data.model.VerifyOtpRequestDto
 import com.payu.finance.data.model.VerifyOtpResponseDto
+import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.POST
@@ -17,5 +21,8 @@ interface AuthApiService {
 
     @POST("users/login")
     suspend fun verifyOtp(@Body request: VerifyOtpRequestDto): Response<VerifyOtpResponseDto>
+    
+    @POST("users/authenticate")
+    suspend fun authenticate(@Body request: RequestBody): Response<AuthenticateResponseDto>
 }
 

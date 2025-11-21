@@ -32,6 +32,10 @@ data class SectionItemDto(
     val title: String?,
     @SerializedName("subtitle")
     val subtitle: String?,
+    @SerializedName("subTitle")
+    val subTitle: String? = null,
+    @SerializedName("description")
+    val description: String? = null,
     @SerializedName("type")
     val type: String,
     @SerializedName("class")
@@ -98,6 +102,8 @@ data class ActionsDto(
     val default: ActionItemDto? = null,
     @SerializedName("primary")
     val primary: ActionItemDto? = null,
+    @SerializedName("secondary")
+    val secondary: ActionItemDto? = null,
     @SerializedName("home")
     val home: ActionItemDto? = null,
     @SerializedName("history")
@@ -151,6 +157,8 @@ fun SectionItemDto.toDomain(): com.payu.finance.domain.model.SectionItem {
     return com.payu.finance.domain.model.SectionItem(
         title = title,
         subtitle = subtitle,
+        subTitle = subTitle,
+        description = description,
         type = type,
         className = className,
         meta = meta?.toDomain(),
@@ -193,7 +201,8 @@ fun ActionsDto.toNavigationActions(): com.payu.finance.domain.model.NavigationAc
 fun ActionsDto.toComponentActions(): com.payu.finance.domain.model.ComponentActions {
     return com.payu.finance.domain.model.ComponentActions(
         default = default?.toDomain(),
-        primary = primary?.toDomain()
+        primary = primary?.toDomain(),
+        secondary = secondary?.toDomain()
     )
 }
 

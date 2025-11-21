@@ -6,6 +6,7 @@ import com.payu.finance.data.model.ErrorMessagesDto
 import com.payu.finance.data.model.MobileInputScreenContentDto
 import com.payu.finance.data.model.OtpErrorMessagesDto
 import com.payu.finance.data.model.OtpScreenContentDto
+import com.payu.finance.data.model.ProfileScreenDto
 import kotlinx.coroutines.delay
 
 /**
@@ -90,6 +91,153 @@ class ScreenContentRemoteDataSource(
         } else {
             throw Exception("Failed to fetch OTP screen content: ${response.message()}")
         }
+        */
+    }
+    
+    /**
+     * Get Profile Screen Content
+     */
+    suspend fun getProfileScreenContent(): ProfileScreenDto {
+        val response = apiService.getProfileScreenContent()
+        if (response.isSuccessful && response.body() != null) {
+            return response.body()!!
+        } else {
+            throw Exception("Failed to fetch profile screen content: ${response.message()}")
+        }
+        
+        // Fallback mock data (for testing/development)
+        /*
+        return ProfileScreenDto(
+            screen = com.payu.finance.data.model.ScreenDto(
+                title = "Hi, Rahul",
+                subtitle = "+91 9988776655·",
+                description = "KYC Verified",
+                meta = com.payu.finance.data.model.MetaDto(
+                    appVersionLabel = "App Version: 7.6.6"
+                ),
+                actions = com.payu.finance.data.model.ActionsDto(
+                    primary = com.payu.finance.data.model.ActionItemDto(
+                        text = "Help",
+                        type = "WEBLINK",
+                        url = "help url"
+                    )
+                ),
+                sections = com.payu.finance.data.model.SectionsDto(
+                    items = listOf(
+                        com.payu.finance.data.model.SectionItemDto(
+                            type = "list",
+                            className = "section",
+                            components = com.payu.finance.data.model.ComponentsDto(
+                                items = listOf(
+                                    com.payu.finance.data.model.ComponentItemDto(
+                                        type = "actionable_card",
+                                        title = "Privacy policy",
+                                        actions = com.payu.finance.data.model.ActionsDto(
+                                            default = com.payu.finance.data.model.ActionItemDto(
+                                                text = "",
+                                                type = "WEBLINK",
+                                                url = "web url"
+                                            )
+                                        ),
+                                        assets = com.payu.finance.data.model.AssetsDto(
+                                            leadingIcon = "",
+                                            trailingIcon = ""
+                                        )
+                                    ),
+                                    com.payu.finance.data.model.ComponentItemDto(
+                                        type = "actionable_card",
+                                        title = "DPO Terms & Conditions",
+                                        actions = com.payu.finance.data.model.ActionsDto(
+                                            default = com.payu.finance.data.model.ActionItemDto(
+                                                text = "",
+                                                type = "WEBLINK",
+                                                url = "web url"
+                                            )
+                                        ),
+                                        assets = com.payu.finance.data.model.AssetsDto(
+                                            leadingIcon = "",
+                                            trailingIcon = ""
+                                        )
+                                    ),
+                                    com.payu.finance.data.model.ComponentItemDto(
+                                        type = "actionable_card",
+                                        title = "Terms & Conditions",
+                                        actions = com.payu.finance.data.model.ActionsDto(
+                                            default = com.payu.finance.data.model.ActionItemDto(
+                                                text = "",
+                                                type = "WEBLINK",
+                                                url = "web url"
+                                            )
+                                        ),
+                                        assets = com.payu.finance.data.model.AssetsDto(
+                                            leadingIcon = "",
+                                            trailingIcon = ""
+                                        )
+                                    ),
+                                    com.payu.finance.data.model.ComponentItemDto(
+                                        type = "actionable_card",
+                                        title = "Grievance redressal policy",
+                                        actions = com.payu.finance.data.model.ActionsDto(
+                                            default = com.payu.finance.data.model.ActionItemDto(
+                                                text = "",
+                                                type = "WEBLINK",
+                                                url = "web url"
+                                            )
+                                        ),
+                                        assets = com.payu.finance.data.model.AssetsDto(
+                                            leadingIcon = "",
+                                            trailingIcon = ""
+                                        )
+                                    )
+                                )
+                            )
+                        ),
+                        com.payu.finance.data.model.SectionItemDto(
+                            type = "list",
+                            className = "section",
+                            components = com.payu.finance.data.model.ComponentsDto(
+                                items = listOf(
+                                    com.payu.finance.data.model.ComponentItemDto(
+                                        type = "actionable_card",
+                                        title = "Sign out",
+                                        actions = com.payu.finance.data.model.ActionsDto(
+                                            default = com.payu.finance.data.model.ActionItemDto(
+                                                text = "",
+                                                type = "bottomSheet",
+                                                url = "url"
+                                            )
+                                        ),
+                                        assets = com.payu.finance.data.model.AssetsDto(
+                                            leadingIcon = "",
+                                            trailingIcon = ""
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                    )
+                ),
+                type = "screen"
+            ),
+            subScreen = com.payu.finance.data.model.SubScreenDto(
+                bottomSheet = com.payu.finance.data.model.BottomSheetDto(
+                    title = "Logout?",
+                    subtitle = "You won't be able to get transaction notifications after logging out. Are you sure you want to log out?"
+                ),
+                actions = com.payu.finance.data.model.ActionsDto(
+                    primary = com.payu.finance.data.model.ActionItemDto(
+                        text = "Logout",
+                        type = "logout",
+                        url = null
+                    ),
+                    secondary = com.payu.finance.data.model.ActionItemDto(
+                        text = "Stay",
+                        type = "DISMISS",
+                        url = null
+                    )
+                )
+            )
+        )
         */
     }
 }

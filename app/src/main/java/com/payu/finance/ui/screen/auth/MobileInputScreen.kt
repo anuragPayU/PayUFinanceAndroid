@@ -62,6 +62,11 @@ fun MobileInputScreen(
     val sendOtpResource by viewModel.sendOtpResource.collectAsState()
     val screenContent: EnterMobileScreenData? = uiState.content
 
+    // Reset sendOtpResource when screen is entered (to prevent re-navigation when coming back from OTP screen)
+    LaunchedEffect(Unit) {
+        viewModel.handleEvent(MobileInputEvent.ResetSendOtpResource)
+    }
+
     // Navigate to OTP screen when OTP is sent successfully
     LaunchedEffect(sendOtpResource) {
         if (sendOtpResource is Resource.Success) {

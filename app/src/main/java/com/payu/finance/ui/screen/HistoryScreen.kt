@@ -1,6 +1,7 @@
 package com.payu.finance.ui.screen
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -14,6 +15,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -101,7 +103,7 @@ fun HistoryContent(
                 markup = "Transaction History",
                 style = LpTypography.TitleSection,
                 color = PayUFinanceColors.ContentPrimary,
-                modifier = Modifier.padding(bottom = Spacing20)
+                modifier = Modifier.padding(bottom = Spacing30)
             )
         }
 
@@ -129,23 +131,67 @@ fun HistoryItemCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
+            .border(
+                width = 1.dp,
+                color = PayUFinanceColors.BorderPrimary,
+                shape = RoundedCornerShape(Spacing30)
+            )
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(Spacing30),
         colors = CardDefaults.cardColors(
-            containerColor = PayUFinanceColors.CardBackground
+            containerColor = PayUFinanceColors.BackgroundPrimary
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        Column(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(Spacing40)
+                .padding(Spacing40),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
+            // Left side: Icon and Content
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.weight(1f),
+                horizontalArrangement = Arrangement.Start,
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                // Transaction Icon
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(RoundedCornerShape(Spacing20))
+                        .background(
+                            when (historyItem.status) {
+                                EmiStatus.PAID -> PayUFinanceColors.SuccessBackground
+                                EmiStatus.OVERDUE -> PayUFinanceColors.ErrorBackground
+                                EmiStatus.PENDING -> PayUFinanceColors.WarningBackground
+                                EmiStatus.PARTIALLY_PAID -> PayUFinanceColors.PrimaryLight
+                            }
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = when (historyItem.status) {
+                            EmiStatus.PAID -> Icons.Default.CheckCircle
+                            EmiStatus.OVERDUE -> Icons.Default.Warning
+                            EmiStatus.PENDING -> Icons.Default.List
+                            EmiStatus.PARTIALLY_PAID -> Icons.Default.List
+                        },
+                        contentDescription = null,
+                        tint = when (historyItem.status) {
+                            EmiStatus.PAID -> PayUFinanceColors.Success
+                            EmiStatus.OVERDUE -> PayUFinanceColors.Error
+                            EmiStatus.PENDING -> PayUFinanceColors.Warning
+                            EmiStatus.PARTIALLY_PAID -> PayUFinanceColors.Primary
+                        },
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+                
+                Spacer(modifier = Modifier.width(Spacing20))
+                
+                // Content Column
                 Column(modifier = Modifier.weight(1f)) {
                     ElevateText(
                         markup = historyItem.title,
@@ -156,27 +202,30 @@ fun HistoryItemCard(
                     ElevateText(
                         markup = historyItem.date,
                         style = LpTypography.BodySmall,
-                        color = PayUFinanceColors.ContentSecondary
+                        color = PayUFinanceColors.ContentSecondary,
+                        modifier = Modifier.padding(bottom = if (historyItem.description.isNotEmpty()) Spacing10 else 0.dp)
                     )
-                }
-                Column(horizontalAlignment = Alignment.End) {
-                    ElevateText(
-                        markup = historyItem.amount,
-                        style = LpTypography.TitleSecondary,
-                        color = PayUFinanceColors.ContentPrimary,
-                        modifier = Modifier.padding(bottom = Spacing10)
-                    )
-                    StatusChip(status = historyItem.status)
+                    if (historyItem.description.isNotEmpty()) {
+                        ElevateText(
+                            markup = historyItem.description,
+                            style = LpTypography.BodySmall,
+                            color = PayUFinanceColors.ContentTertiary
+                        )
+                    }
                 }
             }
-
-            if (historyItem.description.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(Spacing10))
+            
+            // Right side: Amount and Status
+            Column(
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.spacedBy(Spacing10)
+            ) {
                 ElevateText(
-                    markup = historyItem.description,
-                    style = LpTypography.BodySmall,
-                    color = PayUFinanceColors.ContentSecondary
+                    markup = historyItem.amount,
+                    style = LpTypography.TitlePrimary,
+                    color = PayUFinanceColors.ContentPrimary
                 )
+                StatusChip(status = historyItem.status)
             }
         }
     }

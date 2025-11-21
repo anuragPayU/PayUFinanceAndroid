@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import com.payu.finance.navigation.AuthNavigation
+import com.payu.finance.navigation.AppNavigation
 import com.payu.finance.ui.theme.PayUFinanceTheme
 
 class MainActivity : ComponentActivity() {
@@ -21,13 +21,8 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    // Start with Auth flow
-                    AuthNavigation(
-                        onAuthSuccess = { token ->
-                            // TODO: Navigate to main app after successful authentication
-                            // For now, token is received and can be stored
-                        }
-                    )
+                    // Start with Splash screen to check authentication
+                    AppNavigation()
                 }
             }
         }

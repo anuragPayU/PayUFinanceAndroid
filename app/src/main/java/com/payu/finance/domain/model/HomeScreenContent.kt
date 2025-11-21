@@ -15,6 +15,8 @@ data class HomeScreenContent(
 data class SectionItem(
     val title: String?,
     val subtitle: String?,
+    val subTitle: String? = null,
+    val description: String? = null,
     val type: String,
     val className: String?,
     val meta: Meta?,
@@ -52,7 +54,8 @@ data class Meta(
  */
 data class ComponentActions(
     val default: ActionItem?,
-    val primary: ActionItem?
+    val primary: ActionItem?,
+    val secondary: ActionItem? = null
 )
 
 /**

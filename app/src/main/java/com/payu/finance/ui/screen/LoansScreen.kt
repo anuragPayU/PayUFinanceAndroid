@@ -117,7 +117,7 @@ fun LoanCard(loan: LoanUiModel) {
 }
 
 @Composable
-fun ErrorView(
+private fun ErrorView(
     message: String,
     onRetry: () -> Unit
 ) {

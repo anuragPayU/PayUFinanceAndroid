@@ -169,44 +169,63 @@ fun PreviewScreen(
                     title = "Loan Detail Screen",
                     content = {
                         val mockLoanDetail = LoanDetailUiState(
-                            loanId = "loan_1",
-                            loanAmount = "₹1,00,000",
-                            interestRate = "12%",
-                            tenure = 12,
-                            status = LoanStatus.ACTIVE,
-                            disbursementDate = "01 Jan 2023",
-                            dueDate = "15 Jan 2024",
-                            remainingAmount = "₹60,000",
-                            paidAmount = "₹40,000",
-                            totalInstallments = 12,
-                            paidInstallments = 5,
-                            nextEmiDate = "15 Jan 2024",
-                            nextEmiAmount = "₹8,333",
-                            emiBreakdown = listOf(
-                                EmiBreakdownItem(
-                                    installmentNumber = 1,
-                                    amount = "₹8,333",
-                                    dueDate = "15 Dec 2023",
-                                    status = EmiStatus.PAID,
-                                    principalAmount = "₹7,333",
-                                    interestAmount = "₹1,000"
+                            sections = listOf(
+                                LoanDetailSectionUiItem.DetailCard(
+                                    title = "Loan Amount",
+                                    subtitle = "₹1,00,000",
+                                    statusLabel = "Active",
+                                    statusColor = "#4CAF50"
                                 ),
-                                EmiBreakdownItem(
-                                    installmentNumber = 2,
-                                    amount = "₹8,333",
-                                    dueDate = "15 Jan 2024",
-                                    status = EmiStatus.PENDING,
-                                    principalAmount = "₹7,333",
-                                    interestAmount = "₹1,000"
+                                LoanDetailSectionUiItem.EmiDetail(
+                                    title = "EMI Details",
+                                    header = EmiDetailHeader(
+                                        title = "Next EMI",
+                                        subtitle = "₹8,333",
+                                        percentage = "40%"
+                                    ),
+                                    rows = listOf(
+                                        EmiDetailRow(
+                                            title = "Total Installments",
+                                            subtitle = "12"
+                                        ),
+                                        EmiDetailRow(
+                                            title = "Paid Installments",
+                                            subtitle = "5"
+                                        )
+                                    ),
+                                    primaryAction = ActionItem(
+                                        text = "Pay Now",
+                                        type = "REPAYMENT",
+                                        url = null
+                                    )
+                                ),
+                                LoanDetailSectionUiItem.RowListCard(
+                                    title = "Documents",
+                                    items = listOf(
+                                        ActionableCardItem(
+                                            title = "Loan Agreement",
+                                            action = ActionItem(
+                                                text = "Download",
+                                                type = "DOWNLOADABLE",
+                                                url = "https://example.com/loan_agreement.pdf"
+                                            )
+                                        ),
+                                        ActionableCardItem(
+                                            title = "Sanction Letter",
+                                            action = ActionItem(
+                                                text = "Download",
+                                                type = "DOWNLOADABLE",
+                                                url = "https://example.com/sanction_letter.pdf"
+                                            )
+                                        )
+                                    )
                                 )
-                            ),
-                            loanAgreementUrl = "https://example.com/loan_agreement.pdf",
-                            sanctionLetterUrl = "https://example.com/sanction_letter.pdf"
+                            )
                         )
                         LoanDetailContent(
                             loanDetail = mockLoanDetail,
-                            onDownloadLoanAgreement = {},
-                            onDownloadSanctionLetter = {}
+                            onDownloadClick = { url, fileName -> },
+                            onActionClick = { action -> }
                         )
                     }
                 )

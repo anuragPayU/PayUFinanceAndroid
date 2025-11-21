@@ -32,6 +32,15 @@ data class OtpRequest(
 data class OtpResponse(
     val success: Boolean,
     val message: String?,
-    val token: String? = null
+    val token: String? = null,
+    val muid: Long? = null
+)
+
+/**
+ * Domain model for authenticate response
+ */
+data class AuthenticateResponse(
+    val success: Boolean,
+    val message: String? = null
 )
 

@@ -202,6 +202,7 @@ fun EmptyState(
 
 /**
  * Error View Component
+ * Shared component for error display across screens
  */
 @Composable
 fun ErrorView(

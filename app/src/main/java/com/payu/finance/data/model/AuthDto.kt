@@ -3,6 +3,7 @@ package com.payu.finance.data.model
 import com.google.gson.annotations.SerializedName
 import com.payu.finance.domain.model.AuthRequest
 import com.payu.finance.domain.model.AuthResponse
+import com.payu.finance.domain.model.AuthenticateResponse
 import com.payu.finance.domain.model.OtpRequest
 import com.payu.finance.domain.model.OtpResponse
 
@@ -74,6 +75,7 @@ data class VerifyOtpRequestDto(
 /**
  * Data Transfer Object for verifying OTP response
  * Flexible structure to handle different API response formats
+ * Response: {"muid":10304397}
  */
 data class VerifyOtpResponseDto(
     @SerializedName("success")
@@ -85,7 +87,9 @@ data class VerifyOtpResponseDto(
     @SerializedName("access_token")
     val accessToken: String? = null,
     @SerializedName("status")
-    val status: String? = null
+    val status: String? = null,
+    @SerializedName("muid")
+    val muid: Long? = null
 ) {
     fun toDomain(): OtpResponse {
         // Use accessToken if token is not available, or vice versa
@@ -96,7 +100,34 @@ data class VerifyOtpResponseDto(
         return OtpResponse(
             success = isSuccess,
             message = message,
-            token = authToken
+            token = authToken,
+            muid = muid
+        )
+    }
+}
+
+/**
+ * Data Transfer Object for authenticate request
+ * API expects empty body {}
+ */
+class AuthenticateRequestDto(
+    // Empty class - API expects empty JSON object {}
+)
+
+/**
+ * Data Transfer Object for authenticate response
+ * API Response: {} (empty body, success determined by status code)
+ */
+data class AuthenticateResponseDto(
+    @SerializedName("success")
+    val success: Boolean? = null,
+    @SerializedName("message")
+    val message: String? = null
+) {
+    fun toDomain(): AuthenticateResponse {
+        return AuthenticateResponse(
+            success = success ?: true,
+            message = message
         )
     }
 }

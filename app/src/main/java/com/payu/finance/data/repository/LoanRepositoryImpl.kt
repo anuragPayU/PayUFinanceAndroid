@@ -3,6 +3,7 @@ package com.payu.finance.data.repository
 import com.payu.finance.common.Result
 import com.payu.finance.data.datasource.LoanRemoteDataSource
 import com.payu.finance.domain.model.Loan
+import com.payu.finance.domain.model.LoanDetailScreenContent
 import com.payu.finance.domain.repository.LoanRepository
 
 /**
@@ -22,6 +23,12 @@ class LoanRepositoryImpl(
     override suspend fun getLoanById(loanId: String): Result<Loan> {
         return safeApiCall {
             loanRemoteDataSource.getLoanById(loanId).toDomain()
+        }
+    }
+
+    override suspend fun getLoanDetailScreenContent(loanId: String): Result<LoanDetailScreenContent> {
+        return safeApiCall {
+            loanRemoteDataSource.getLoanDetailScreenContent(loanId).toDomain()
         }
     }
 

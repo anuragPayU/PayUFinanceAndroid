@@ -1,6 +1,12 @@
 package com.payu.finance.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -28,7 +34,7 @@ object AuthRoutes {
     const val URL_ARG = "url"
     const val TITLE_ARG = "title"
     
-    fun otpRoute(mobileNumber: String) = "$OTP_VERIFICATION/$mobileNumber"
+    fun otpRoute(mobileNumber: String) = "$OTP_VERIFICATION/${encodeForRoute(mobileNumber)}"
     fun webViewRoute(url: String, title: String) = "web_view/${encodeForRoute(url)}/${encodeForRoute(title)}"
     
     private fun encodeForRoute(text: String): String {
@@ -73,24 +79,37 @@ fun AuthNavigation(
                 }
             )
         ) { backStackEntry ->
-            val mobileNumber = backStackEntry.arguments?.getString(AuthRoutes.MOBILE_NUMBER_ARG) ?: ""
+            val mobileNumberArg = backStackEntry.arguments?.getString(AuthRoutes.MOBILE_NUMBER_ARG)
             
-            // Only create ViewModel if mobileNumber is not empty
-            if (mobileNumber.isNotEmpty()) {
-                val viewModel: OtpViewModel = koinViewModel(parameters = { 
-                    org.koin.core.parameter.parametersOf(mobileNumber) 
-                })
-                
-                OtpScreen(
-                    viewModel = viewModel,
-                    onOtpVerified = { token ->
-                        onAuthSuccess(token)
-                    }
-                )
-            } else {
-                // Navigate back if mobile number is empty
-                navController.popBackStack()
+            // Ensure mobileNumber is always provided - navigate back if missing
+            if (mobileNumberArg.isNullOrEmpty()) {
+                LaunchedEffect(Unit) {
+                    navController.popBackStack()
+                }
+                return@composable
             }
+            
+            // Decode mobile number from route (in case it was URL encoded)
+            val mobileNumber = mobileNumberArg.decodeFromRoute()
+            val viewModel: OtpViewModel = koinViewModel()
+            
+            // Set mobile number once when screen is created, using DisposableEffect to ensure it only runs once
+            DisposableEffect(mobileNumber) {
+                if (viewModel.uiState.value.mobileNumber.isEmpty()) {
+                    viewModel.handleEvent(com.payu.finance.ui.viewmodel.OtpEvent.SetMobileNumber(mobileNumber))
+                }
+                onDispose { }
+            }
+            
+            OtpScreen(
+                viewModel = viewModel,
+                onOtpVerified = { token ->
+                    onAuthSuccess(token)
+                },
+                onBackClick = {
+                    navController.popBackStack()
+                }
+            )
         }
         
         composable(

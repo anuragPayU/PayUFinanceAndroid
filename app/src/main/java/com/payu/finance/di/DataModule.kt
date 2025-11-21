@@ -5,20 +5,25 @@ import com.payu.finance.data.api.LoanApiService
 import com.payu.finance.data.api.RepaymentApiService
 import com.payu.finance.data.api.ScreenContentApiService
 import com.payu.finance.data.datasource.AuthRemoteDataSource
+import com.payu.finance.data.datasource.HistoryRemoteDataSource
 import com.payu.finance.data.datasource.HomeRemoteDataSource
 import com.payu.finance.data.datasource.LoanRemoteDataSource
 import com.payu.finance.data.datasource.RepaymentRemoteDataSource
 import com.payu.finance.data.datasource.ScreenContentRemoteDataSource
+import com.payu.finance.data.preferences.PreferencesManager
 import com.payu.finance.data.repository.AuthRepositoryImpl
+import com.payu.finance.data.repository.HistoryRepositoryImpl
 import com.payu.finance.data.repository.HomeRepositoryImpl
 import com.payu.finance.data.repository.LoanRepositoryImpl
 import com.payu.finance.data.repository.RepaymentRepositoryImpl
 import com.payu.finance.data.repository.ScreenContentRepositoryImpl
 import com.payu.finance.domain.repository.AuthRepository
+import com.payu.finance.domain.repository.HistoryRepository
 import com.payu.finance.domain.repository.HomeRepository
 import com.payu.finance.domain.repository.LoanRepository
 import com.payu.finance.domain.repository.RepaymentRepository
 import com.payu.finance.domain.repository.ScreenContentRepository
+import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
 
 /**
@@ -26,6 +31,11 @@ import org.koin.dsl.module
  * Provides data sources and repository implementations
  */
 val dataModule = module {
+    // Preferences Manager
+    single {
+        PreferencesManager(androidContext())
+    }
+    
     // Data Sources
     single<LoanRemoteDataSource> {
         LoanRemoteDataSource(get<LoanApiService>())
@@ -36,7 +46,7 @@ val dataModule = module {
     }
 
     single<AuthRemoteDataSource> {
-        AuthRemoteDataSource(get<AuthApiService>())
+        AuthRemoteDataSource(get<AuthApiService>(), get<PreferencesManager>())
     }
     
     single<ScreenContentRemoteDataSource> {
@@ -45,6 +55,10 @@ val dataModule = module {
     
     single<HomeRemoteDataSource> {
         HomeRemoteDataSource(get<ScreenContentApiService>())
+    }
+    
+    single<HistoryRemoteDataSource> {
+        HistoryRemoteDataSource(get<ScreenContentApiService>())
     }
 
     // Repositories
@@ -66,6 +80,10 @@ val dataModule = module {
     
     single<HomeRepository> {
         HomeRepositoryImpl(get<HomeRemoteDataSource>())
+    }
+    
+    single<HistoryRepository> {
+        HistoryRepositoryImpl(get<HistoryRemoteDataSource>())
     }
 }
 

@@ -50,6 +50,7 @@ fun OtpScreenContent.toUiModel(): OtpScreenData {
         verifyButtonText = verifyButtonText,
         resendOtpPrefix = resendOtpPrefix,
         resendOtpLinkText = resendOtpLinkText,
+        verifyingButtonText = "Verifying OTP...",
         errorMessages = errorMessages.toUiModel()
     )
 }
