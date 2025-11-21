@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 
 class LoanDetailViewModel(
     private val getLoanDetailScreenContentUseCase: GetLoanDetailScreenContentUseCase
@@ -22,20 +23,12 @@ class LoanDetailViewModel(
         viewModelScope.launch {
             _uiState.value = Resource.Loading()
             try {
-                when (val result = getLoanDetailScreenContentUseCase(loanId)) {
-                    is Result.Success -> {
-                        val screenContent = result.data
-                        // Convert domain model to UI model
-                        val uiState = mapDomainToUi(screenContent)
-                        _uiState.value = Resource.Success(uiState)
-                    }
-                    is Result.Error -> {
-                        _uiState.value = Resource.Error(result.exception.message ?: "Failed to load loan details")
-                    }
-                    is Result.Loading -> {
-                        _uiState.value = Resource.Loading()
-                    }
-                }
+                // Simulate network delay
+                delay(500)
+                
+                // Return dummy data instead of calling API
+                val uiState = createDummyLoanDetailData(loanId)
+                _uiState.value = Resource.Success(uiState)
             } catch (e: Exception) {
                 _uiState.value = Resource.Error(e.message ?: "Failed to load loan details")
             }
@@ -43,7 +36,116 @@ class LoanDetailViewModel(
     }
 
     /**
-     * Map domain model to UI model
+     * Create dummy loan detail data for testing/development
+     */
+    private fun createDummyLoanDetailData(loanId: String): LoanDetailUiState {
+        return LoanDetailUiState(
+            sections = listOf(
+                // Detail Card Section
+                LoanDetailSectionUiItem.DetailCard(
+                    title = "₹1,00,000",
+                    subtitle = "Total Loan Amount",
+                    statusLabel = "Active",
+                    statusColor = "positive"
+                ),
+                
+                // EMI Detail Section
+                LoanDetailSectionUiItem.EmiDetail(
+                    title = "EMI Details",
+                    header = EmiDetailHeader(
+                        title = "₹8,333",
+                        subtitle = "Monthly EMI",
+                        percentage = "40"
+                    ),
+                    rows = listOf(
+                        EmiDetailRow(
+                            title = "Total Amount",
+                            subtitle = "₹1,00,000"
+                        ),
+                        EmiDetailRow(
+                            title = "Paid Amount",
+                            subtitle = "₹40,000"
+                        ),
+                        EmiDetailRow(
+                            title = "Remaining Amount",
+                            subtitle = "₹60,000"
+                        ),
+                        EmiDetailRow(
+                            title = "Installments Paid",
+                            subtitle = "5/12"
+                        ),
+                        EmiDetailRow(
+                            title = "Next Due Date",
+                            subtitle = "15 Jan 2024"
+                        )
+                    ),
+                    primaryAction = ActionItem(
+                        text = "View Schedule",
+                        type = "SEE_SECHEDULE",
+                        url = null
+                    )
+                ),
+                
+                // Auto Pay Status Section
+                LoanDetailSectionUiItem.AutoPayStatus(
+                    title = "Auto Pay",
+                    statusCard = AutoPayStatusCard(
+                        title = "Auto Pay Enabled",
+                        subtitle = "Your EMIs will be automatically deducted on the due date"
+                    )
+                ),
+                
+                // Foreclosure Card Section
+                LoanDetailSectionUiItem.ForeclosureCard(
+                    title = "Foreclosure",
+                    card = ForeclosureCardItem(
+                        title = "Foreclose Loan",
+                        subtitle = "Pay off your remaining balance early",
+                        description = "You can foreclose your loan by paying the remaining balance. Early foreclosure may have applicable charges.",
+                        action = ActionItem(
+                            text = "Foreclose Now",
+                            type = "FORECLOSURE",
+                            url = null
+                        )
+                    )
+                ),
+                
+                // Row List Card Section (Documents)
+                LoanDetailSectionUiItem.RowListCard(
+                    title = "Documents",
+                    items = listOf(
+                        ActionableCardItem(
+                            title = "Loan Agreement",
+                            action = ActionItem(
+                                text = "Download",
+                                type = "DOWNLOAD",
+                                url = "https://example.com/documents/loan-agreement.pdf"
+                            )
+                        ),
+                        ActionableCardItem(
+                            title = "Payment Receipt",
+                            action = ActionItem(
+                                text = "Download",
+                                type = "DOWNLOAD",
+                                url = "https://example.com/documents/payment-receipt.pdf"
+                            )
+                        ),
+                        ActionableCardItem(
+                            title = "Statement",
+                            action = ActionItem(
+                                text = "Download",
+                                type = "DOWNLOAD",
+                                url = "https://example.com/documents/statement.pdf"
+                            )
+                        )
+                    )
+                )
+            )
+        )
+    }
+
+    /**
+     * Map domain model to UI model (kept for future use when API is ready)
      */
     private fun mapDomainToUi(domain: com.payu.finance.domain.model.LoanDetailScreenContent): LoanDetailUiState {
         val sections = domain.sections.mapNotNull { section ->

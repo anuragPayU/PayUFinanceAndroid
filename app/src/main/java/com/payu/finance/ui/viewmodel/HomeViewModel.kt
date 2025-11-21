@@ -180,14 +180,17 @@ class HomeViewModel(
                                 else -> EmiStatus.PENDING
                             }
                             
+                            val url = component.actions?.default?.url ?: ""
+                            val loanId = extractLoanIdFromUrl(url)
+                            
                             allEmis.add(
                                 EmiItem(
-                                    id = component.actions?.default?.url ?: "",
+                                    id = url,
                                     installmentNumber = subtitle.split("⋅")[0].trim(),
                                     amount = component.title ?: "₹0",
                                     dueDate = "",
                                     status = status,
-                                    loanId = component.actions?.default?.url ?: ""
+                                    loanId = loanId
                                 )
                             )
                         }
@@ -313,6 +316,33 @@ class HomeViewModel(
     private fun calculateDaysOverdue(dueDate: String): Int {
         // TODO: Implement date calculation
         return 0
+    }
+
+    /**
+     * Extracts loan ID from a URL path.
+     * Handles formats like:
+     * - "/loan-details/2103694" -> "2103694"
+     * - "/loan-details/2103694/" -> "2103694"
+     * - "loan-details/2103694" -> "2103694"
+     * - "2103694" -> "2103694"
+     */
+    private fun extractLoanIdFromUrl(url: String): String {
+        if (url.isBlank()) return ""
+        
+        // Remove leading/trailing slashes and split by '/'
+        val parts = url.trim().trim('/').split('/')
+        
+        // Find the last numeric part (loan ID)
+        // Common patterns: /loan-details/{id}, /loans/{id}, etc.
+        val loanId = parts.lastOrNull() ?: ""
+        
+        // If the last part is empty or not numeric, try to find a numeric part
+        return if (loanId.isNotBlank() && loanId.all { it.isDigit() }) {
+            loanId
+        } else {
+            // Fallback: find any numeric part in the URL
+            parts.findLast { it.isNotBlank() && it.all { char -> char.isDigit() } } ?: url
+        }
     }
 
     override fun handleError(exception: Exception) {

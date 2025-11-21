@@ -133,11 +133,13 @@ fun EmiProgressCard(
 fun NextRepaymentCard(
     nextRepayment: NextRepaymentCard,
     onPayClick: () -> Unit = {},
+    onCardClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Card(
         modifier = modifier
             .fillMaxWidth()
+            .clickable(onClick = onCardClick)
             .border(
                 width = 1.dp,
                 color = PayUFinanceColors.BorderPrimary,
@@ -230,11 +232,14 @@ fun NextRepaymentCard(
 fun DueCard(
     dueCard: DueCard,
     onPayClick: () -> Unit = {},
+    onCardClick: () -> Unit = {},
     onInfoClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(onClick = onCardClick),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         shape = RoundedCornerShape(16.dp), // Updated to match Figma design
         colors = CardDefaults.cardColors(
@@ -365,7 +370,7 @@ private fun EmiItemContent(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(20.dp),
+                .padding(vertical = 12.dp, horizontal = 16.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {

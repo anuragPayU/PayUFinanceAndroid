@@ -41,6 +41,7 @@ fun HomeScreen(
     onNavigateToProfile: () -> Unit = {},
     onNavigateToRepayment: (String) -> Unit = {},
     onNavigateToLoanDetail: (String) -> Unit = {},
+    onNavigateToEmiSchedule: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val homeResource by viewModel.homeResource.collectAsState()
@@ -67,14 +68,16 @@ fun HomeScreen(
             if (homeState != null) {
                 HomeContent(
                     homeState = homeState,
-                    onPayRepayment = { repaymentId ->
-                        viewModel.handleEvent(HomeEvent.PayRepayment(repaymentId))
-                        onNavigateToRepayment(repaymentId)
+                    onPayRepayment = { loanId ->
+                        // Use loanId for navigation (repayment route expects loanId)
+                        viewModel.handleEvent(HomeEvent.PayRepayment(loanId))
+                        onNavigateToRepayment(loanId)
                     },
                     onViewAllDue = {
                         // Navigate to all due repayments
                     },
                     onNavigateToLoanDetail = onNavigateToLoanDetail,
+                    onNavigateToEmiSchedule = onNavigateToEmiSchedule,
                     modifier = modifier.fillMaxSize()
                 )
             }
@@ -92,6 +95,7 @@ fun HomeContent(
     onPayDue: () -> Unit = {},
     onViewAllDue: () -> Unit = {},
     onNavigateToLoanDetail: (String) -> Unit = {},
+    onNavigateToEmiSchedule: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -143,9 +147,15 @@ fun HomeContent(
 
                     // Due Card (shown first if there are overdue payments)
                     homeState.dueCard?.let { dueCard ->
+                        // Get loanId from nextRepayment or use default
+                        val loanId = homeState.nextRepayment?.loanId ?: "loan_1"
                         DueCard(
                             dueCard = dueCard,
                             onPayClick = onPayDue,
+                            onCardClick = {
+                                // Navigate to EMI Schedule when card is clicked
+                                onNavigateToEmiSchedule(loanId)
+                            },
                             onInfoClick = {
                                 // Show info dialog or bottom sheet
                                 // TODO: Implement info action for due card
@@ -188,7 +198,11 @@ fun HomeContent(
                     homeState.nextRepayment?.let { nextRepayment ->
                         NextRepaymentCard(
                             nextRepayment = nextRepayment,
-                            onPayClick = { onPayRepayment(nextRepayment.repaymentId) },
+                            onPayClick = { onPayRepayment(nextRepayment.loanId) },
+                            onCardClick = {
+                                // Navigate to EMI Schedule when card is clicked
+                                onNavigateToEmiSchedule(nextRepayment.loanId)
+                            },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(
@@ -369,7 +383,8 @@ private fun HomeScreenPreview() {
             homeState = mockHomeState,
             onPayRepayment = {},
             onViewAllDue = {},
-            onNavigateToLoanDetail = {}
+            onNavigateToLoanDetail = {},
+            onNavigateToEmiSchedule = {}
         )
     }
 }

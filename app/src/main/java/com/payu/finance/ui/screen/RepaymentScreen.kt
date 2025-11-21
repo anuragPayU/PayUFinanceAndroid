@@ -15,7 +15,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
@@ -26,6 +25,7 @@ import com.lazypay.android.elevate.component.LPButton
 import com.lazypay.android.elevate.component.Text as ElevateText
 import com.lazypay.android.elevate.theme.*
 import androidx.compose.material.ButtonDefaults
+import androidx.compose.ui.Alignment
 import com.payu.finance.ui.theme.PayUFinanceColors
 import com.payu.finance.ui.viewmodel.RepaymentEvent
 import com.payu.finance.ui.viewmodel.RepaymentViewModel
@@ -189,6 +189,7 @@ fun RepaymentContent(
 
 /**
  * Payment Option Radio Card
+ * Updated layout: Radio button on left, amount on right (bold), description below title
  */
 @Composable
 fun PaymentOptionRadioCard(
@@ -202,11 +203,11 @@ fun PaymentOptionRadioCard(
             .border(
                 width = if (isSelected) 2.dp else 1.dp,
                 color = if (isSelected) PayUFinanceColors.Primary else PayUFinanceColors.BorderPrimary,
-                shape = RoundedCornerShape(Spacing30)
+                shape = RoundedCornerShape(Spacing40)
             )
             .clickable(onClick = onClick),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        shape = RoundedCornerShape(Spacing30),
+        shape = RoundedCornerShape(Spacing40),
         colors = CardDefaults.cardColors(
             containerColor = if (isSelected) PayUFinanceColors.PrimaryLight else PayUFinanceColors.BackgroundPrimary
         )
@@ -216,32 +217,47 @@ fun PaymentOptionRadioCard(
                 .fillMaxWidth()
                 .padding(Spacing40),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.Top
         ) {
-            Column(
+            // Left side: Radio Button and Content
+            Row(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(Spacing10)
+                horizontalArrangement = Arrangement.Start,
+                verticalAlignment = Alignment.Top
             ) {
-                ElevateText(
-                    markup = option.title,
-                    style = LpTypography.TitleSecondary,
-                    color = PayUFinanceColors.ContentPrimary
+                // Radio Button on the left
+                RadioButton(
+                    selected = isSelected,
+                    onClick = onClick,
+                    colors = RadioButtonDefaults.colors(
+                        selectedColor = PayUFinanceColors.Primary,
+                        unselectedColor = PayUFinanceColors.BorderPrimary
+                    ),
+                    modifier = Modifier.padding(end = Spacing20)
                 )
-                ElevateText(
-                    markup = option.description,
-                    style = LpTypography.BodySmall,
-                    color = PayUFinanceColors.ContentSecondary
-                )
+                
+                // Title and Description Column
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(Spacing10)
+                ) {
+                    ElevateText(
+                        markup = option.title,
+                        style = LpTypography.TitleSecondary,
+                        color = PayUFinanceColors.ContentPrimary
+                    )
+                    ElevateText(
+                        markup = option.description,
+                        style = LpTypography.BodySmall,
+                        color = PayUFinanceColors.ContentSecondary
+                    )
+                }
             }
 
-            // Radio Button
-            RadioButton(
-                selected = isSelected,
-                onClick = onClick,
-                colors = RadioButtonDefaults.colors(
-                    selectedColor = PayUFinanceColors.Primary,
-                    unselectedColor = PayUFinanceColors.BorderPrimary
-                )
+            // Right side: Amount (bold)
+            ElevateText(
+                markup = option.amount,
+                style = LpTypography.TitleSection, // Bold style
+                color = PayUFinanceColors.ContentPrimary
             )
         }
     }

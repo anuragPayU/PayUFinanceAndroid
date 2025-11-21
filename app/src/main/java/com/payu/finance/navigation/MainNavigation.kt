@@ -10,6 +10,7 @@ import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
+import com.payu.finance.ui.screen.EmiScheduleScreen
 import com.payu.finance.ui.screen.HistoryScreen
 import com.payu.finance.ui.screen.HomeScreen
 import com.payu.finance.ui.screen.LoanDetailScreen
@@ -37,9 +38,11 @@ object MainRoutes {
     const val PROFILE = "profile"
     const val HISTORY = "history"
     const val WEB_VIEW = "web_view/{url}"
+    const val EMI_SCHEDULE = "emi_schedule/{loanId}"
     
     fun loanDetail(loanId: String) = "loan_detail/$loanId"
     fun repayment(loanId: String) = "repayment/$loanId"
+    fun emiSchedule(loanId: String) = "emi_schedule/$loanId"
     fun webView(url: String): String {
         val encodedUrl = URLEncoder.encode(url, StandardCharsets.UTF_8.toString())
         return "web_view/$encodedUrl"
@@ -84,6 +87,9 @@ fun MainNavigation(
                     },
                     onNavigateToLoanDetail = { loanId ->
                         navController.navigate(MainRoutes.loanDetail(loanId))
+                    },
+                    onNavigateToEmiSchedule = { loanId ->
+                        navController.navigate(MainRoutes.emiSchedule(loanId))
                     }
                 )
             }
@@ -158,6 +164,24 @@ fun MainNavigation(
                     viewModel = repaymentViewModel,
                     loanId = loanId,
                     onBackClick = { navController.popBackStack() }
+                )
+            }
+            
+            composable(
+                route = MainRoutes.EMI_SCHEDULE,
+                arguments = listOf(navArgument("loanId") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val loanId = backStackEntry.arguments?.getString("loanId") ?: ""
+                
+                EmiScheduleScreen(
+                    loanId = loanId,
+                    onBackClick = { navController.popBackStack() },
+                    onPayEmiClick = { emiId ->
+                        // Navigate to repayment screen when Pay Now is clicked
+                        navController.navigate(MainRoutes.repayment(loanId)) {
+                            popUpTo(MainRoutes.EMI_SCHEDULE) { inclusive = false }
+                        }
+                    }
                 )
             }
         }
