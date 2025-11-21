@@ -18,12 +18,14 @@ import com.payu.finance.ui.screen.LoansScreen
 import com.payu.finance.ui.screen.MainScreen
 import com.payu.finance.ui.screen.ProfileScreen
 import com.payu.finance.ui.screen.RepaymentScreen
+import com.payu.finance.ui.screen.RepaymentsScreen
 import com.payu.finance.ui.screen.WebViewScreen
 import com.payu.finance.ui.viewmodel.HistoryViewModel
 import com.payu.finance.ui.viewmodel.HomeViewModel
 import com.payu.finance.ui.viewmodel.LoanDetailViewModel
 import com.payu.finance.ui.viewmodel.LoansViewModel
 import com.payu.finance.ui.viewmodel.RepaymentViewModel
+import com.payu.finance.ui.viewmodel.RepaymentsViewModel
 import org.koin.androidx.compose.koinViewModel
 
 /**
@@ -90,6 +92,11 @@ fun MainNavigation(
                     },
                     onNavigateToEmiSchedule = { loanId ->
                         navController.navigate(MainRoutes.emiSchedule(loanId))
+                    },
+                    onNavigateToRepayments = {
+                        navController.navigate(MainRoutes.REPAYMENTS) {
+                            popUpTo(MainRoutes.HOME) { inclusive = false }
+                        }
                     }
                 )
             }
@@ -164,6 +171,16 @@ fun MainNavigation(
                     viewModel = repaymentViewModel,
                     loanId = loanId,
                     onBackClick = { navController.popBackStack() }
+                )
+            }
+            
+            composable(MainRoutes.REPAYMENTS) {
+                val repaymentsViewModel: RepaymentsViewModel = koinViewModel()
+                
+                RepaymentsScreen(
+                    viewModel = repaymentsViewModel,
+                    loanId = null, // Can be made optional if needed
+                    modifier = Modifier
                 )
             }
             

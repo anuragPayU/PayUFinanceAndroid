@@ -42,6 +42,7 @@ fun HomeScreen(
     onNavigateToRepayment: (String) -> Unit = {},
     onNavigateToLoanDetail: (String) -> Unit = {},
     onNavigateToEmiSchedule: (String) -> Unit = {},
+    onNavigateToRepayments: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val homeResource by viewModel.homeResource.collectAsState()
@@ -72,6 +73,10 @@ fun HomeScreen(
                         // Use loanId for navigation (repayment route expects loanId)
                         viewModel.handleEvent(HomeEvent.PayRepayment(loanId))
                         onNavigateToRepayment(loanId)
+                    },
+                    onPayDue = {
+                        // Navigate to Repayments screen when Due card button is clicked
+                        onNavigateToRepayments()
                     },
                     onViewAllDue = {
                         // Navigate to all due repayments
@@ -137,13 +142,14 @@ fun HomeContent(
                         color = ContentInversePrimary,
                         modifier = Modifier.padding(bottom = Spacing10)
                     )
-                    Spacer(modifier = Modifier.height(Spacing20))
                     ElevateText(
                         markup = homeState.subTitle,
                         style = LpTypography.BodyNormal,
                         color = ContentInversePrimary,
                         modifier = Modifier.padding(bottom = Spacing40)
                     )
+                    Spacer(modifier = Modifier.height(Spacing20))
+
 
                     // Due Card (shown first if there are overdue payments)
                     homeState.dueCard?.let { dueCard ->
