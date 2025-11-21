@@ -4,7 +4,7 @@ package com.payu.finance.ui.model
  * UI Model for Home Screen
  */
 data class HomeUiState(
-    val userName: String = "Hi, Rahul",
+    val userName: String = "Hi, Aishwarya",
     val subTitle: String = "Track all your loans",
     val emiProgress: EmiProgressCard? = null,
     val nextRepayment: NextRepaymentCard? = null,
