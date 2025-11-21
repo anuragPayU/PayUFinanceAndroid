@@ -4,6 +4,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -30,7 +32,6 @@ import com.payu.finance.ui.viewmodel.HistoryViewModel
 /**
  * History Screen - Shows transaction/repayment history
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistoryScreen(
     viewModel: HistoryViewModel,
@@ -39,42 +40,41 @@ fun HistoryScreen(
 ) {
     val historyResource by viewModel.historyResource.collectAsState()
 
-    Scaffold(
+    Box(
         modifier = modifier
-    ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(PayUFinanceColors.BackgroundPrimary)
-                .padding(paddingValues)
-        ) {
-            when (val resource = historyResource) {
-                is Resource.Loading -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator()
-                    }
+            .fillMaxSize()
+            .background(PayUFinanceColors.BackgroundPrimary)
+    ) {
+        when (val resource = historyResource) {
+            is Resource.Loading -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
                 }
-                is Resource.Error -> {
-                    ErrorView(
-                        message = resource.message ?: "An error occurred",
-                        onRetry = { viewModel.loadHistory() }
-                    )
-                }
-                is Resource.Success -> {
-                    val historyItems = resource.data ?: emptyList()
-                    if (historyItems.isEmpty()) {
+            }
+            is Resource.Error -> {
+                ErrorView(
+                    message = resource.message ?: "An error occurred",
+                    onRetry = { viewModel.loadHistory() }
+                )
+            }
+            is Resource.Success -> {
+                val historyState = resource.data
+                if (historyState != null) {
+                    if (historyState.items.isEmpty()) {
                         EmptyHistoryView()
                     } else {
                         HistoryContent(
-                            historyItems = historyItems,
+                            historyState = historyState,
                             onItemClick = { loanId ->
                                 onNavigateToLoanDetail(loanId)
                             }
                         )
                     }
+                } else {
+                    EmptyHistoryView()
                 }
             }
         }
@@ -86,41 +86,211 @@ fun HistoryScreen(
  */
 @Composable
 fun HistoryContent(
-    historyItems: List<HistoryItem>,
+    historyState: HistoryUiState,
     onItemClick: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize()
+            .padding(16.dp), // Extra padding to ensure last item is fully visible above navigation bar,),
         contentPadding = PaddingValues(
             horizontal = Spacing40,
             vertical = Spacing30
-        ),
-        verticalArrangement = Arrangement.spacedBy(Spacing20)
+        )
     ) {
         item {
-            ElevateText(
-                markup = "Transaction History",
-                style = LpTypography.TitleSection,
-                color = PayUFinanceColors.ContentPrimary,
+            HistoryHeader(
+                header = historyState.header,
                 modifier = Modifier.padding(bottom = Spacing30)
             )
         }
 
-        items(
-            items = historyItems,
-            key = { it.id }
-        ) { item ->
-            HistoryItemCard(
-                historyItem = item,
-                onClick = { onItemClick(item.loanId) }
+        item {
+            HistoryListGroupedCard(
+                historyItems = historyState.items,
+                onItemClick = { historyItem ->
+                    onItemClick(historyItem.loanId)
+                }
             )
         }
     }
 }
 
 /**
- * History Item Card
+ * History Header Component
+ */
+@Composable
+fun HistoryHeader(
+    header: HistoryHeader,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier.fillMaxWidth()) {
+        ElevateText(
+            markup = header.title,
+            style = LpTypography.TitlePrimary,
+            color = PayUFinanceColors.ContentPrimary,
+            modifier = Modifier.padding(bottom = Spacing10)
+        )
+        if (header.subtitle.isNotEmpty()) {
+            ElevateText(
+                markup = header.subtitle,
+                style = LpTypography.BodyNormal,
+                color = PayUFinanceColors.ContentSecondary
+            )
+        }
+    }
+}
+
+/**
+ * Grouped History List Card
+ * Single card container with borders and rounded corners containing all history items
+ */
+@Composable
+fun HistoryListGroupedCard(
+    historyItems: List<HistoryItem>,
+    onItemClick: (HistoryItem) -> Unit = {},
+    modifier: Modifier = Modifier
+) {
+    if (historyItems.isEmpty()) return
+    
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .border(
+                width = 1.dp,
+                color = PayUFinanceColors.BorderPrimary,
+                shape = RoundedCornerShape(16.dp)
+            ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = PayUFinanceColors.BackgroundPrimary
+        )
+    ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            historyItems.forEachIndexed { index, historyItem ->
+                HistoryItemContent(
+                    historyItem = historyItem,
+                    onClick = { onItemClick(historyItem) },
+                    showDivider = index < historyItems.size - 1
+                )
+            }
+        }
+    }
+}
+
+/**
+ * History Item Content (without card wrapper, used inside grouped card)
+ */
+@Composable
+private fun HistoryItemContent(
+    historyItem: HistoryItem,
+    onClick: () -> Unit = {},
+    showDivider: Boolean = false
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Left side: Icon and Content
+            Row(
+                modifier = Modifier.weight(1f),
+                horizontalArrangement = Arrangement.Start,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Transaction Icon
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(RoundedCornerShape(Spacing20))
+                        .background(
+                            when (historyItem.status) {
+                                EmiStatus.PAID -> PayUFinanceColors.SuccessBackground
+                                EmiStatus.OVERDUE -> PayUFinanceColors.ErrorBackground
+                                EmiStatus.PENDING -> PayUFinanceColors.WarningBackground
+                                EmiStatus.PARTIALLY_PAID -> PayUFinanceColors.PrimaryLight
+                            }
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = when (historyItem.status) {
+                            EmiStatus.PAID -> Icons.Default.CheckCircle
+                            EmiStatus.OVERDUE -> Icons.Default.Warning
+                            EmiStatus.PENDING -> Icons.Default.List
+                            EmiStatus.PARTIALLY_PAID -> Icons.Default.List
+                        },
+                        contentDescription = null,
+                        tint = when (historyItem.status) {
+                            EmiStatus.PAID -> PayUFinanceColors.Success
+                            EmiStatus.OVERDUE -> PayUFinanceColors.Error
+                            EmiStatus.PENDING -> PayUFinanceColors.Warning
+                            EmiStatus.PARTIALLY_PAID -> PayUFinanceColors.Primary
+                        },
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+                
+                Spacer(modifier = Modifier.width(Spacing20))
+                
+                // Content Column
+                Column(modifier = Modifier.weight(1f)) {
+                    ElevateText(
+                        markup = historyItem.title,
+                        style = LpTypography.TitleSecondary,
+                        color = PayUFinanceColors.ContentPrimary,
+                        modifier = Modifier.padding(bottom = Spacing10)
+                    )
+                    ElevateText(
+                        markup = historyItem.date,
+                        style = LpTypography.BodySmall,
+                        color = PayUFinanceColors.ContentSecondary,
+                        modifier = Modifier.padding(bottom = if (historyItem.description.isNotEmpty()) Spacing10 else 0.dp)
+                    )
+                    if (historyItem.description.isNotEmpty()) {
+                        ElevateText(
+                            markup = historyItem.description,
+                            style = LpTypography.BodySmall,
+                            color = PayUFinanceColors.ContentTertiary
+                        )
+                    }
+                }
+            }
+            
+            // Right side: Amount and Status
+            Column(
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.spacedBy(Spacing10)
+            ) {
+                ElevateText(
+                    markup = historyItem.amount,
+                    style = LpTypography.TitlePrimary,
+                    color = PayUFinanceColors.ContentPrimary
+                )
+                StatusChip(status = historyItem.status)
+            }
+        }
+        
+        // Divider between items (not after last item)
+        if (showDivider) {
+            HorizontalDivider(
+                color = PayUFinanceColors.BorderPrimary,
+                thickness = 1.dp
+            )
+        }
+    }
+}
+
+/**
+ * History Item Card (legacy - kept for backward compatibility if needed)
  */
 @Composable
 fun HistoryItemCard(
@@ -267,6 +437,22 @@ fun EmptyHistoryView(
 }
 
 /**
+ * History UI State
+ */
+data class HistoryUiState(
+    val header: HistoryHeader,
+    val items: List<HistoryItem>
+)
+
+/**
+ * History Header Data Model
+ */
+data class HistoryHeader(
+    val title: String,
+    val subtitle: String
+)
+
+/**
  * History Item Data Model
  */
 data class HistoryItem(
@@ -314,7 +500,14 @@ private fun HistoryScreenPreview() {
             )
         )
 
-        HistoryContent(historyItems = mockHistoryItems)
+        val mockHistoryState = HistoryUiState(
+            header = HistoryHeader(
+                title = "Transaction History",
+                subtitle = "View all your past transactions"
+            ),
+            items = mockHistoryItems
+        )
+        HistoryContent(historyState = mockHistoryState)
     }
 }
 

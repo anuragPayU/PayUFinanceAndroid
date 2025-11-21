@@ -53,28 +53,37 @@ class HomeViewModel(
         execute {
             _homeResource.value = Resource.Loading()
             
-            // Try to get home screen content from API first
-            val homeContentResult = getHomeScreenContentUseCase().toResource()
-            
-            when (homeContentResult) {
-                is Resource.Success -> {
-                    val homeContent = homeContentResult.data
-                    if (homeContent != null) {
-                        // Map API response to UI state
-                        val homeState = mapHomeContentToUiState(homeContent)
-                        _homeResource.value = Resource.Success(homeState)
-                    } else {
-                        // Fallback to old logic if API fails
-                        loadHomeDataFromLoansAndRepayments()
+            try {
+                // Call Home API: GET /users/repayment-dashboard
+                // CookieInterceptor will automatically add cookies
+                val result = getHomeScreenContentUseCase()
+                val homeContentResult = result.toResource()
+                
+                when (homeContentResult) {
+                    is Resource.Success -> {
+                        val homeContent = homeContentResult.data
+                        if (homeContent != null) {
+                            // Map API response to UI state
+                            val homeState = mapHomeContentToUiState(homeContent)
+                            _homeResource.value = Resource.Success(homeState)
+                        } else {
+                            // API returned null - show error
+                            _homeResource.value = Resource.Error("No data received from API")
+                        }
+                    }
+                    is Resource.Error -> {
+                        // API call failed - show error instead of falling back
+                        _homeResource.value = Resource.Error(
+                            homeContentResult.message ?: "Failed to load home data"
+                        )
+                    }
+                    is Resource.Loading -> {
+                        _homeResource.value = Resource.Loading()
                     }
                 }
-                is Resource.Error -> {
-                    // Fallback to old logic if API fails
-                    loadHomeDataFromLoansAndRepayments()
-                }
-                is Resource.Loading -> {
-                    _homeResource.value = Resource.Loading()
-                }
+            } catch (e: Exception) {
+                // Handle any unexpected errors
+                _homeResource.value = Resource.Error(e.message ?: "Failed to load home data")
             }
         }
     }

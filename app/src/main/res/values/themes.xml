@@ -7,10 +7,13 @@
         <item name="colorPrimary">#6200EE</item>
         <item name="colorPrimaryDark">#3700B3</item>
         <item name="colorAccent">#03DAC5</item>
-        <!-- Status bar color -->
+        <!-- Status bar and navigation bar - transparent for edge-to-edge -->
         <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
         <!-- Window background -->
         <item name="android:windowBackground">@android:color/white</item>
+        <!-- Enable drawing system bar backgrounds -->
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
     </style>
 </resources>
 

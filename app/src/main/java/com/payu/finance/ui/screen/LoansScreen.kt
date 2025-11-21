@@ -1,6 +1,7 @@
 package com.payu.finance.ui.screen
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
@@ -30,6 +31,7 @@ fun LoansScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
+            .statusBarsPadding()
             .padding(16.dp)
     ) {
         Text(
@@ -73,7 +75,10 @@ fun LoansList(loans: List<LoanUiModel>) {
         LazyColumn(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            items(loans) { loan ->
+            items(
+                items = loans,
+                key = { it.id }
+            ) { loan ->
                 LoanCard(loan = loan)
             }
         }

@@ -3,6 +3,8 @@ package com.payu.finance.ui.screen
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
@@ -27,6 +29,7 @@ fun WebViewScreen(
     val context = LocalContext.current
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0.dp), // Disable automatic window insets for edge-to-edge
         topBar = {
             TopAppBar(
                 title = { Text(title) },
@@ -55,6 +58,7 @@ fun WebViewScreen(
             },
             modifier = modifier
                 .fillMaxSize()
+                .statusBarsPadding()
                 .padding(paddingValues)
         )
     }

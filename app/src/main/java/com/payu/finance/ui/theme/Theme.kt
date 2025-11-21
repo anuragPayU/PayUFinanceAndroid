@@ -34,8 +34,18 @@ fun PayUFinanceTheme(
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            window.statusBarColor = colorScheme.primary.toArgb()
+            // Ensure edge-to-edge is enabled (enableEdgeToEdge() should handle this, but ensure it's set)
+            WindowCompat.setDecorFitsSystemWindows(window, false)
+            // Explicitly set status bar and navigation bar to transparent
+            window.statusBarColor = android.graphics.Color.TRANSPARENT
+            window.navigationBarColor = android.graphics.Color.TRANSPARENT
+            // Ensure system bars are drawn
+            window.addFlags(android.view.WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
+            window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
+            window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION)
+            // Set light status bar icons for light theme (dark icons on light background)
             WindowInsetsControllerCompat(window, view).isAppearanceLightStatusBars = !darkTheme
+            WindowInsetsControllerCompat(window, view).isAppearanceLightNavigationBars = !darkTheme
         }
     }
 

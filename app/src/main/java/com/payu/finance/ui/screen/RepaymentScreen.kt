@@ -4,6 +4,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -56,6 +58,7 @@ fun RepaymentScreen(
     }
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0.dp), // Disable automatic window insets for edge-to-edge
         topBar = {
             TopAppBar(
                 title = {
@@ -84,7 +87,8 @@ fun RepaymentScreen(
             modifier = modifier
                 .fillMaxSize()
                 .background(PayUFinanceColors.BackgroundPrimary)
-                .padding(paddingValues)
+                .statusBarsPadding() // Only add status bar padding
+                .padding(paddingValues) // Keep Scaffold padding for TopAppBar
         ) {
             RepaymentContent(
                 selectedOption = uiState.selectedPaymentOption,

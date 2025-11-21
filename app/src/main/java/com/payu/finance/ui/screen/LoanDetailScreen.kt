@@ -8,6 +8,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -62,6 +64,7 @@ fun LoanDetailScreen(
     }
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0.dp), // Disable automatic window insets for edge-to-edge
         snackbarHost = {
             SnackbarHost(hostState = snackbarHostState)
         },
@@ -93,7 +96,8 @@ fun LoanDetailScreen(
             modifier = modifier
                 .fillMaxSize()
                 .background(PayUFinanceColors.BackgroundPrimary)
-                .padding(paddingValues)
+                .statusBarsPadding() // Only add status bar padding
+                .padding(paddingValues) // Keep Scaffold padding for TopAppBar
         ) {
             when (val resource = uiState) {
                 is Resource.Loading -> {

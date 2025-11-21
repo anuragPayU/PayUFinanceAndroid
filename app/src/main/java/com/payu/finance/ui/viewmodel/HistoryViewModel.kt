@@ -6,6 +6,8 @@ import com.payu.finance.domain.usecase.GetHistoryScreenContentUseCase
 import com.payu.finance.ui.base.BaseViewModel
 import com.payu.finance.ui.model.EmiStatus
 import com.payu.finance.ui.screen.HistoryItem
+import com.payu.finance.ui.screen.HistoryUiState
+import com.payu.finance.ui.screen.HistoryHeader
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -25,8 +27,8 @@ class HistoryViewModel(
     private val getHistoryScreenContentUseCase: GetHistoryScreenContentUseCase
 ) : BaseViewModel<Unit, HistoryEvent>() {
 
-    private val _historyResource = MutableStateFlow<Resource<List<HistoryItem>>>(Resource.Loading())
-    val historyResource: StateFlow<Resource<List<HistoryItem>>> = _historyResource.asStateFlow()
+    private val _historyResource = MutableStateFlow<Resource<HistoryUiState>>(Resource.Loading())
+    val historyResource: StateFlow<Resource<HistoryUiState>> = _historyResource.asStateFlow()
 
     override fun createInitialState(): Unit {
         return Unit
@@ -54,7 +56,14 @@ class HistoryViewModel(
                         if (historyContent != null) {
                             // Map API response to UI state
                             val historyItems = mapHistoryContentToHistoryItems(historyContent)
-                            Resource.Success(historyItems)
+                            val uiState = HistoryUiState(
+                                header = HistoryHeader(
+                                    title = historyContent.title,
+                                    subtitle = historyContent.subtitle
+                                ),
+                                items = historyItems
+                            )
+                            Resource.Success(uiState)
                         } else {
                             Resource.Error("No history data available")
                         }

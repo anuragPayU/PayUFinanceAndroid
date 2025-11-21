@@ -4,6 +4,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -32,7 +34,6 @@ import org.koin.androidx.compose.koinViewModel
 /**
  * Profile Screen
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     viewModel: ProfileViewModel = koinViewModel(),
@@ -43,15 +44,11 @@ fun ProfileScreen(
     val profileResource by viewModel.profileResource.collectAsState()
     val showLogoutBottomSheet by viewModel.showLogoutBottomSheet.collectAsState()
 
-    Scaffold(
+    Box(
         modifier = modifier
-    ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(PayUFinanceColors.BackgroundPrimary)
-                .padding(paddingValues)
-        ) {
+            .fillMaxSize()
+            .background(PayUFinanceColors.BackgroundPrimary)
+    ) {
             when (val resource = profileResource) {
                 is Resource.Loading -> {
                     Box(
@@ -89,7 +86,6 @@ fun ProfileScreen(
                     )
                 }
             }
-        }
     }
 
     // Logout Bottom Sheet
@@ -126,7 +122,9 @@ fun ProfileContent(
         modifier = Modifier
             .fillMaxSize()
             .background(PayUFinanceColors.BackgroundPrimary),
-        contentPadding = PaddingValues(bottom = Spacing40)
+        contentPadding = PaddingValues(
+            bottom = Spacing40 + 16.dp // Extra padding to ensure last item is fully visible above navigation bar
+        )
     ) {
         // Profile Header Section
         item {

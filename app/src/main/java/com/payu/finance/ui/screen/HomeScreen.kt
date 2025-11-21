@@ -2,6 +2,8 @@ package com.payu.finance.ui.screen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
@@ -13,10 +15,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.material.ButtonDefaults
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import com.lazypay.android.elevate.component.ButtonState
 import com.lazypay.android.elevate.component.LPButton
 import com.lazypay.android.elevate.component.Text as ElevateText
 import com.lazypay.android.elevate.theme.*
+import com.payu.finance.R
 import com.payu.finance.common.Resource
 import com.payu.finance.ui.theme.PayUFinanceColors
 import com.payu.finance.ui.components.*
@@ -28,7 +34,6 @@ import com.payu.finance.ui.viewmodel.HomeViewModel
 /**
  * Main Home Screen (without bottom navigation - handled by MainScreen wrapper)
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel,
@@ -40,46 +45,38 @@ fun HomeScreen(
 ) {
     val homeResource by viewModel.homeResource.collectAsState()
 
-    Scaffold(
-        modifier = modifier
-    ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(PayUFinanceColors.BackgroundPrimary)
-                .padding(paddingValues)
-        ) {
-            when (val resource = homeResource) {
-                is Resource.Loading -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator()
-                    }
-                }
-                is Resource.Error -> {
-                    ErrorView(
-                        message = resource.message ?: "An error occurred",
-                        onRetry = { viewModel.handleEvent(HomeEvent.Refresh) }
-                    )
-                }
-                is Resource.Success -> {
-                    val homeState = resource.data
-                    if (homeState != null) {
-                        HomeContent(
-                            homeState = homeState,
-                            onPayRepayment = { repaymentId ->
-                                viewModel.handleEvent(HomeEvent.PayRepayment(repaymentId))
-                                onNavigateToRepayment(repaymentId)
-                            },
-                            onViewAllDue = {
-                                // Navigate to all due repayments
-                            },
-                            onNavigateToLoanDetail = onNavigateToLoanDetail
-                        )
-                    }
-                }
+    when (val resource = homeResource) {
+        is Resource.Loading -> {
+            Box(
+                modifier = modifier
+                    .fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        }
+        is Resource.Error -> {
+            ErrorView(
+                message = resource.message ?: "An error occurred",
+                onRetry = { viewModel.handleEvent(HomeEvent.Refresh) },
+                modifier = modifier
+            )
+        }
+        is Resource.Success -> {
+            val homeState = resource.data
+            if (homeState != null) {
+                HomeContent(
+                    homeState = homeState,
+                    onPayRepayment = { repaymentId ->
+                        viewModel.handleEvent(HomeEvent.PayRepayment(repaymentId))
+                        onNavigateToRepayment(repaymentId)
+                    },
+                    onViewAllDue = {
+                        // Navigate to all due repayments
+                    },
+                    onNavigateToLoanDetail = onNavigateToLoanDetail,
+                    modifier = modifier.fillMaxSize()
+                )
             }
         }
     }
@@ -92,6 +89,7 @@ fun HomeScreen(
 fun HomeContent(
     homeState: HomeUiState,
     onPayRepayment: (String) -> Unit = {},
+    onPayDue: () -> Unit = {},
     onViewAllDue: () -> Unit = {},
     onNavigateToLoanDetail: (String) -> Unit = {},
     modifier: Modifier = Modifier
@@ -100,64 +98,133 @@ fun HomeContent(
         modifier = modifier
             .fillMaxSize()
             .background(PayUFinanceColors.BackgroundPrimary),
-        verticalArrangement = Arrangement.spacedBy(Spacing20),
-        contentPadding = PaddingValues(
-            horizontal = Spacing40,
-            vertical = Spacing30
-        )
+        contentPadding = PaddingValues(bottom = 16.dp) // Extra padding to ensure last item is fully visible
     ) {
-        // Due Card (shown first if there are overdue payments)
-        homeState.dueCard?.let { dueCard ->
-            item {
-                DueCard(
-                    dueCard = dueCard,
-                    onViewAllClick = onViewAllDue
+        // Background section with gradient image and cards - extends fully edge-to-edge behind status bar
+        item {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color.Black)
+                    // Extends fully behind status bar - no padding on the Box itself
+            ) {
+                // Background gradient image - extends fully edge-to-edge
+                androidx.compose.foundation.Image(
+                    painter = painterResource(R.drawable.ic_gradient),
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxWidth(),
+                    contentScale = ContentScale.FillWidth
                 )
-            }
-        }
+                
+                // Cards container with proper padding (including status bar padding)
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .statusBarsPadding() // Add status bar padding for content
+                        .padding(
+                            horizontal = Spacing40,
+                            vertical = Spacing40
+                        )
+                ) {
 
-        // EMI Progress Card
-        homeState.emiProgress?.let { emiProgress ->
-            item {
-                EmiProgressCard(emiProgress = emiProgress)
-            }
-        }
+                    ElevateText(
+                        markup = homeState.userName,
+                        style = LpTypography.TitleHeader,
+                        color = ContentInversePrimary,
+                        modifier = Modifier.padding(bottom = Spacing10)
+                    )
+                    Spacer(modifier = Modifier.height(Spacing20))
+                    ElevateText(
+                        markup = homeState.subTitle,
+                        style = LpTypography.BodyNormal,
+                        color = ContentInversePrimary,
+                        modifier = Modifier.padding(bottom = Spacing40)
+                    )
 
-        // Next Repayment Card
-        homeState.nextRepayment?.let { nextRepayment ->
-            item {
-                NextRepaymentCard(
-                    nextRepayment = nextRepayment,
-                    onPayClick = { onPayRepayment(nextRepayment.repaymentId) }
-                )
-            }
-        }
-
-        // All EMIs Section Header
-        if (homeState.allEmis.isNotEmpty()) {
-            item {
-                SectionHeader(
-                    title = "All EMIs",
-                    modifier = Modifier.padding(vertical = Spacing20)
-                )
-            }
-
-            // All EMIs List
-            items(homeState.allEmis) { emiItem ->
-                EmiItemCard(
-                    emiItem = emiItem,
-                    onClick = {
-                        // Navigate to loan detail screen when EMI card is clicked
-                        onNavigateToLoanDetail(emiItem.loanId)
+                    // Due Card (shown first if there are overdue payments)
+                    homeState.dueCard?.let { dueCard ->
+                        DueCard(
+                            dueCard = dueCard,
+                            onPayClick = onPayDue,
+                            onInfoClick = {
+                                // Show info dialog or bottom sheet
+                                // TODO: Implement info action for due card
+                            },
+                            modifier = Modifier.padding(bottom = Spacing20)
+                        )
                     }
-                )
+
+                    // EMI Progress Card
+                    homeState.emiProgress?.let { emiProgress ->
+                        Spacer(Modifier.size(Spacing40))
+                        EmiProgressCard(
+                            emiProgress = emiProgress,
+                            modifier = Modifier.padding(bottom = Spacing20)
+                        )
+                    }
+                }
             }
-        } else {
-            item {
-                EmptyState(
-                    message = "No EMIs found",
-                    modifier = Modifier.padding(32.dp)
-                )
+        }
+        // White background section for remaining content
+        item {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(PayUFinanceColors.BackgroundPrimary)
+            ) {
+                Column {
+                    // Next Repayment Section Header
+                    homeState.nextRepayment?.let {
+                        SectionHeader(
+                            title = "Next Repayment",
+                            modifier = Modifier.padding(
+                                horizontal = Spacing40,
+                                vertical = Spacing20
+                            )
+                        )
+                    }
+                    
+                    // Next Repayment Card
+                    homeState.nextRepayment?.let { nextRepayment ->
+                        NextRepaymentCard(
+                            nextRepayment = nextRepayment,
+                            onPayClick = { onPayRepayment(nextRepayment.repaymentId) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(
+                                    horizontal = Spacing40,
+                                ).padding(bottom = Spacing20)
+                        )
+                    }
+
+                    // All EMIs Section Header
+                    if (homeState.allEmis.isNotEmpty()) {
+                        SectionHeader(
+                            title = "All EMIs",
+                            modifier = Modifier.padding(
+                                horizontal = Spacing40,
+                                vertical = Spacing20
+                            )
+                        )
+
+                        // All EMIs List - Grouped card design
+                        EmiListGroupedCard(
+                            emis = homeState.allEmis,
+                            onItemClick = { emiItem ->
+                                // Navigate to loan detail screen when EMI card is clicked
+                                onNavigateToLoanDetail(emiItem.loanId)
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = Spacing40)
+                        )
+                    } else {
+                        EmptyState(
+                            message = "No EMIs found",
+                            modifier = Modifier.padding(32.dp)
+                        )
+                    }
+                }
             }
         }
     }
@@ -174,7 +241,7 @@ fun SectionHeader(
     ElevateText(
         markup = title,
         style = LpTypography.TitleSection,
-        color = PayUFinanceColors.ContentPrimary,
+        color = PayUFinanceColors.ContentSecondary,
         modifier = modifier
     )
 }

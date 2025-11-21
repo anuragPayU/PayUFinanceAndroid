@@ -1,9 +1,14 @@
 package com.payu.finance.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.KeyboardArrowRight
+//import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -34,7 +39,7 @@ fun EmiProgressCard(
     Card(
         modifier = modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        shape = RoundedCornerShape(Spacing30),
+        shape = RoundedCornerShape(16.dp), // Updated to match Figma design
         colors = CardDefaults.cardColors(
             containerColor = PayUFinanceColors.CardBackground
         )
@@ -42,7 +47,7 @@ fun EmiProgressCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(Spacing40)
+                .padding(20.dp) // Updated padding to match Figma
         ) {
             ElevateText(
                 markup = "EMI Progress",
@@ -122,6 +127,7 @@ fun EmiProgressCard(
 
 /**
  * Next Repayment Card Component
+ * Column layout with full-width button as per Figma design
  */
 @Composable
 fun NextRepaymentCard(
@@ -130,59 +136,75 @@ fun NextRepaymentCard(
     modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .border(
+                width = 1.dp,
+                color = PayUFinanceColors.BorderPrimary,
+                shape = RoundedCornerShape(16.dp)
+            ),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        shape = RoundedCornerShape(Spacing30),
+        shape = RoundedCornerShape(16.dp), // Updated to match Figma design
         colors = CardDefaults.cardColors(
             containerColor = if (nextRepayment.isOverdue) {
                 PayUFinanceColors.CardBackgroundOverdue
             } else {
-                PayUFinanceColors.CardBackground
+                PayUFinanceColors.BackgroundPrimary // White background
             }
         )
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(Spacing40),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+                .padding(20.dp) // Updated padding to match Figma
         ) {
-            Column(modifier = Modifier.weight(1f)) {
+            // Title
+            ElevateText(
+                markup = if (nextRepayment.isOverdue) "Overdue Payment" else "Next Repayment",
+                style = LpTypography.TitlePrimary,
+                color = if (nextRepayment.isOverdue) {
+                    PayUFinanceColors.Error
+                } else {
+                    PayUFinanceColors.ContentPrimary
+                },
+                modifier = Modifier.padding(bottom = Spacing10)
+            )
+            
+            // Amount
+            ElevateText(
+                markup = nextRepayment.amount,
+                style = LpTypography.TitleSection,
+                color = PayUFinanceColors.ContentPrimary,
+                modifier = Modifier.padding(bottom = Spacing10)
+            )
+            
+            // Due date
+            ElevateText(
+                markup = "Due: ${nextRepayment.dueDate}",
+                style = LpTypography.BodyNormal,
+                color = PayUFinanceColors.ContentSecondary,
+                modifier = Modifier.padding(bottom = Spacing10)
+            )
+            
+            // Days remaining
+            nextRepayment.daysRemaining?.let { days ->
                 ElevateText(
-                    markup = if (nextRepayment.isOverdue) "Overdue Payment" else "Next Repayment",
-                    style = LpTypography.TitlePrimary,
-                    color = if (nextRepayment.isOverdue) {
-                        PayUFinanceColors.Error
-                    } else {
-                        PayUFinanceColors.ContentPrimary
-                    },
-                    modifier = Modifier.padding(bottom = Spacing10)
+                    markup = if (days > 0) "$days days remaining" else "Due today",
+                    style = LpTypography.BodySmall,
+                    color = PayUFinanceColors.Primary,
+                    modifier = Modifier.padding(bottom = Spacing20)
                 )
-                ElevateText(
-                    markup = nextRepayment.amount,
-                    style = LpTypography.TitleSection,
-                    color = PayUFinanceColors.ContentPrimary,
-                    modifier = Modifier.padding(bottom = Spacing10)
-                )
-                ElevateText(
-                    markup = "Due: ${nextRepayment.dueDate}",
-                    style = LpTypography.BodyNormal,
-                    color = PayUFinanceColors.ContentSecondary,
-                    modifier = Modifier.padding(bottom = Spacing10)
-                )
-                nextRepayment.daysRemaining?.let { days ->
-                    ElevateText(
-                        markup = if (days > 0) "$days days remaining" else "Due today",
-                        style = LpTypography.BodySmall,
-                        color = PayUFinanceColors.Primary
-                    )
-                }
             }
             
+            // Add spacing before button if daysRemaining is null
+            if (nextRepayment.daysRemaining == null) {
+                Spacer(modifier = Modifier.height(Spacing10))
+            }
+            
+            // CTA Button - Full width
             if (nextRepayment.showRepaymentCta) {
                 LPButton(
-                    modifier = Modifier.padding(start = Spacing20),
+                    modifier = Modifier.fillMaxWidth(),
                     text = "Pay",
                     state = ButtonState.Enabled,
                     backgroundColor = PayUFinanceColors.Primary,
@@ -202,56 +224,123 @@ fun NextRepaymentCard(
 
 /**
  * Due Card Component (shown when there are overdue payments)
+ * Red background with white text, info icon, and full-width CTA button as per Figma design
  */
 @Composable
 fun DueCard(
     dueCard: DueCard,
-    onViewAllClick: () -> Unit = {},
+    onPayClick: () -> Unit = {},
+    onInfoClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        shape = RoundedCornerShape(Spacing30),
+        shape = RoundedCornerShape(16.dp), // Updated to match Figma design
         colors = CardDefaults.cardColors(
-            containerColor = if (dueCard.isUrgent) {
-                PayUFinanceColors.CardBackgroundOverdue
-            } else {
-                PayUFinanceColors.CardBackground
-            }
+            containerColor = PayUFinanceColors.Error // Red background as per Figma
         )
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(Spacing40),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+                .padding(20.dp) // Updated padding to match Figma
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                ElevateText(
-                    markup = "Total Due",
-                    style = LpTypography.TitlePrimary,
-                    color = if (dueCard.isUrgent) PayUFinanceColors.Error else PayUFinanceColors.ContentPrimary,
-                    modifier = Modifier.padding(bottom = Spacing10)
-                )
-                ElevateText(
-                    markup = dueCard.totalDueAmount,
-                    style = LpTypography.TitleSection,
-                    color = if (dueCard.isUrgent) PayUFinanceColors.Error else PayUFinanceColors.ContentPrimary,
-                    modifier = Modifier.padding(bottom = Spacing10)
-                )
-                ElevateText(
-                    markup = "${dueCard.overdueCount} ${if (dueCard.overdueCount == 1) "payment" else "payments"} overdue",
-                    style = LpTypography.BodyNormal,
-                    color = PayUFinanceColors.ContentSecondary
-                )
+            // Title row with info icon
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(Spacing10)
+                ) {
+                    ElevateText(
+                        markup = "Total Due",
+                        style = LpTypography.TitlePrimary,
+                        color = ContentInversePrimary, // White text as per Figma
+                    )
+                    Icon(
+                        imageVector = Icons.Default.Info,
+                        contentDescription = "Info",
+                        modifier = Modifier
+                            .size(16.dp)
+                            .clickable(onClick = onInfoClick),
+                        tint = ContentInversePrimary // White icon as per Figma
+                    )
+                }
             }
-            TextButton(onClick = onViewAllClick) {
-                ElevateText(
-                    markup = "View All",
-                    style = LpTypography.TitleSecondary,
-                    color = PayUFinanceColors.Primary
+            
+            Spacer(modifier = Modifier.height(Spacing10))
+            
+            // Amount
+            ElevateText(
+                markup = dueCard.totalDueAmount,
+                style = LpTypography.TitleSection,
+                color = ContentInversePrimary, // White text as per Figma
+                modifier = Modifier.padding(bottom = Spacing10)
+            )
+            
+            // Overdue count
+            ElevateText(
+                markup = "${dueCard.overdueCount} ${if (dueCard.overdueCount == 1) "payment" else "payments"} overdue",
+                style = LpTypography.BodyNormal,
+                color = ContentInversePrimary, // White text as per Figma
+                modifier = Modifier.padding(bottom = Spacing20)
+            )
+            
+            // CTA Button - Full width
+            LPButton(
+                modifier = Modifier.fillMaxWidth(),
+                text = "Pay Now",
+                state = ButtonState.Enabled,
+                backgroundColor = ContentInversePrimary, // White background for button
+                pressedBackgroundColor = PayUFinanceColors.BackgroundSecondary,
+                disabledBackgroundColor = PayUFinanceColors.BackgroundTertiary,
+                contentColor = PayUFinanceColors.Error, // Red text on white button
+                pressedContentColor = PayUFinanceColors.Error,
+                disabledContentColor = PayUFinanceColors.ContentTertiary,
+                circularProgressColor = PayUFinanceColors.Error,
+                buttonElevation = ButtonDefaults.elevation(),
+                onClick = onPayClick
+            )
+        }
+    }
+}
+
+/**
+ * Grouped EMI List Card
+ * Single card container with borders and rounded corners only on first and last items
+ */
+@Composable
+fun EmiListGroupedCard(
+    emis: List<EmiItem>,
+    onItemClick: (EmiItem) -> Unit = {},
+    modifier: Modifier = Modifier
+) {
+    if (emis.isEmpty()) return
+    
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .border(
+                width = 1.dp,
+                color = PayUFinanceColors.BorderPrimary,
+                shape = RoundedCornerShape(16.dp)
+            ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = PayUFinanceColors.BackgroundPrimary
+        )
+    ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            emis.forEachIndexed { index, emiItem ->
+                EmiItemContent(
+                    emiItem = emiItem,
+                    onClick = { onItemClick(emiItem) },
+                    showDivider = index < emis.size - 1
                 )
             }
         }
@@ -259,7 +348,94 @@ fun DueCard(
 }
 
 /**
- * All EMIs Section Item
+ * EMI Item Content (without card wrapper, used inside grouped card)
+ * Updated layout to match Figma design
+ */
+@Composable
+private fun EmiItemContent(
+    emiItem: EmiItem,
+    onClick: () -> Unit = {},
+    showDivider: Boolean = false
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Left side - Icon and Content
+            Row(
+                modifier = Modifier.weight(1f),
+                horizontalArrangement = Arrangement.spacedBy(Spacing20),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Icon
+                Icon(
+                    imageVector = Icons.Default.Info,
+                    contentDescription = "Loan",
+                    tint = PayUFinanceColors.ContentSecondary,
+                    modifier = Modifier.size(48.dp)
+                )
+                
+                // Content
+                Column(modifier = Modifier.weight(1f)) {
+                    // Amount - Title (on top)
+                    ElevateText(
+                        markup = emiItem.amount,
+                        style = LpTypography.TitleSection,
+                        color = PayUFinanceColors.ContentPrimary,
+                        modifier = Modifier.padding(bottom = Spacing10)
+                    )
+                    
+                    // Installment number - Subtitle (below amount)
+                    ElevateText(
+                        markup = emiItem.installmentNumber,
+                        style = LpTypography.TitleSecondary,
+                        color = PayUFinanceColors.ContentPrimary,
+                        modifier = Modifier.padding(bottom = Spacing10)
+                    )
+                    
+//                    // Due date (without "Due:" prefix)
+//                    ElevateText(
+//                        markup = emiItem.dueDate,
+//                        style = LpTypography.BodySmall,
+//                        color = PayUFinanceColors.ContentSecondary,
+//                        modifier = Modifier.padding(bottom = Spacing10)
+//                    )
+                    
+                    // Status chip - Label (at bottom)
+                    StatusChip(status = emiItem.status)
+                }
+            }
+            
+            // Right side - Chevron icon indicating clickable
+            Icon(
+                imageVector = Icons.Default.KeyboardArrowRight,
+                contentDescription = "View details",
+                tint = PayUFinanceColors.ContentTertiary,
+                modifier = Modifier.size(24.dp)
+            )
+        }
+        
+        // Divider between items (not after last item)
+        if (showDivider) {
+            HorizontalDivider(
+                color = PayUFinanceColors.BorderPrimary,
+                thickness = 1.dp,
+                modifier = Modifier.padding(horizontal = 20.dp)
+            )
+        }
+    }
+}
+
+/**
+ * All EMIs Section Item (legacy - kept for backward compatibility)
  */
 @Composable
 fun EmiItemCard(
@@ -270,9 +446,14 @@ fun EmiItemCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick),
+            .clickable(onClick = onClick)
+            .border(
+                width = 1.dp,
+                color = PayUFinanceColors.BorderPrimary,
+                shape = RoundedCornerShape(16.dp)
+            ),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        shape = RoundedCornerShape(Spacing30),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = PayUFinanceColors.CardBackground
         )
@@ -280,7 +461,7 @@ fun EmiItemCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(Spacing40),
+                .padding(20.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
